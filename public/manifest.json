@@ -1,6 +1,6 @@
 {
     "name": "Librostream",
-    "short_name": "Librostream",
+    "short_name": "Librostream ",
     "description": "Stream free audiobooks from LibriVox",
     "start_url": "/",
     "display": "standalone",
