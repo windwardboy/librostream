@@ -41,3 +41,6 @@ Route::get('/privacy-policy', function () {
 
 // Contact Us Page
 Route::get('/contact', [App\Http\Controllers\ContactController::class, 'index'])->name('pages.contact');
+
+// FAQ Page
+Route::get('/faq', [App\Http\Controllers\FaqController::class, 'index'])->name('pages.faq');
