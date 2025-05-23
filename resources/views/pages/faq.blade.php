@@ -36,7 +36,7 @@
     </div>
 
     {{-- Optional: Add Schema Markup for FAQPage --}}
-    {{-- @push('scripts')
+    @push('scripts')
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -65,5 +65,5 @@
       }]
     }
     </script>
-    @endpush --}}
+    @endpush
 @endsection
