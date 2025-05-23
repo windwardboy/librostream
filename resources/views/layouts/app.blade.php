@@ -37,18 +37,6 @@
     }
     </script>
 
-    {{-- Script to unregister Service Workers (Temporary for PWA icon debugging) --}}
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let registration of registrations) {
-                    registration.unregister();
-                }
-                console.log('All Service Workers unregistered.');
-            });
-        }
-    </script>
-
     {{-- Additional head content can be yielded here --}}
     @stack('head')
 </head>
