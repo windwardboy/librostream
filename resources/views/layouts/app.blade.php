@@ -71,7 +71,7 @@
     <div id="cookie-consent-banner" class="fixed bottom-0 right-0 z-50 w-full md:max-w-sm bg-gray-800 text-white p-4 shadow-lg transform translate-y-full transition-transform duration-300 ease-in-out">
         <div class="container mx-auto flex items-center justify-between">
             <p class="text-sm mr-4">
-                This website uses cookies to ensure you get the best experience. <a href="{{ route('pages.cookie-policy') }}" class="text-indigo-400 hover:underline">Learn more</a>
+                This website uses cookies to ensure you get the best experience. <a href="{{ url('/cookie-policy') }}" class="text-indigo-400 hover:underline">Learn more</a>
             </p>
             <button id="accept-cookies" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 px-4 rounded">
                 Got it!
