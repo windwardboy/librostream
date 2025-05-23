@@ -56,10 +56,15 @@
                     @endif
                 </select>
             </div>
-            <div class="md:col-span-1 flex justify-end lg:col-span-1"> {{-- Adjust col-span for larger screens --}}
+            <div class="md:col-span-1 flex justify-end lg:col-span-1 space-x-2"> {{-- Adjust col-span for larger screens and add space between buttons --}}
                 <button type="submit" class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600">
                     Filter
                 </button>
+                @if(request('search') || request('category_id') || request('language')) {{-- Show clear button only if filters are active --}}
+                    <a href="{{ route('audiobooks.index') }}" class="inline-flex justify-center py-2 px-6 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Clear Filters
+                    </a>
+                @endif
             </div>
         </form>
     </section>
@@ -73,60 +78,62 @@
     </div>
 
     {{-- Latest Audiobook Releases Section --}}
-    @if (isset($latestAudiobooks) && $latestAudiobooks->count() > 0)
-    <section class="mb-12">
-        <h2 class="text-3xl font-bold text-gray-700 dark:text-gray-300 mb-6">Latest Releases</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            @foreach ($latestAudiobooks as $audiobook)
-                <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
-                    @if($audiobook->slug) {{-- Add check for slug --}}
-                    <a href="{{ route('audiobooks.show', $audiobook->slug) }}" class="block">
-                        @if($audiobook->cover_image)
-                            <img src="{{ $audiobook->cover_image }}" alt="Cover image for {{ $audiobook->title }}" class="w-full h-64 object-cover">
-                        @else
-                            <div class="w-full h-64 bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
-                                <span class="text-gray-500 dark:text-gray-400">No Image</span>
+    @unless(request('search')) {{-- Hide this section if a search query is present --}}
+        @if (isset($latestAudiobooks) && $latestAudiobooks->count() > 0)
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-700 dark:text-gray-300 mb-6">Latest Releases</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                @foreach ($latestAudiobooks as $audiobook)
+                    <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                        @if($audiobook->slug) {{-- Add check for slug --}}
+                        <a href="{{ route('audiobooks.show', $audiobook->slug) }}" class="block">
+                            @if($audiobook->cover_image)
+                                <img src="{{ $audiobook->cover_image }}" alt="Cover image for {{ $audiobook->title }}" class="w-full h-64 object-cover">
+                            @else
+                                <div class="w-full h-64 bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
+                                    <span class="text-gray-500 dark:text-gray-400">No Image</span>
+                                </div>
+                            @endif
+                            <div class="p-6">
+                                <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2 truncate" title="{{ $audiobook->title }}">{{ $audiobook->title }}</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">By: {{ $audiobook->author }}</p>
+                                @if($audiobook->narrator)
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Narrated by: {{ $audiobook->narrator }}</p>
+                                @endif
+                                @if($audiobook->category)
+                                    <p class="text-xs text-gray-500 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 inline-block px-2 py-1 rounded-full mt-2">
+                                        {{ $audiobook->category->name }}
+                                    </p>
+                                @endif
+                            </div>
+                        </a>
+                        @else {{-- Display card without link if slug is missing --}}
+                             @if($audiobook->cover_image)
+                                <img src="{{ $audiobook->cover_image }}" alt="Cover image for {{ $audiobook->title }}" class="w-full h-64 object-cover">
+                            @else
+                                <div class="w-full h-64 bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
+                                    <span class="text-gray-500 dark:text-gray-400">No Image</span>
+                                </div>
+                            @endif
+                            <div class="p-6">
+                                <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2 truncate" title="{{ $audiobook->title }}">{{ $audiobook->title }}</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">By: {{ $audiobook->author }}</p>
+                                @if($audiobook->narrator)
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Narrated by: {{ $audiobook->narrator }}</p>
+                                @endif
+                                @if($audiobook->category)
+                                    <p class="text-xs text-gray-500 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 inline-block px-2 py-1 rounded-full mt-2">
+                                        {{ $audiobook->category->name }}
+                                    </p>
+                                @endif
                             </div>
                         @endif
-                        <div class="p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2 truncate" title="{{ $audiobook->title }}">{{ $audiobook->title }}</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">By: {{ $audiobook->author }}</p>
-                            @if($audiobook->narrator)
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Narrated by: {{ $audiobook->narrator }}</p>
-                            @endif
-                            @if($audiobook->category)
-                                <p class="text-xs text-gray-500 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 inline-block px-2 py-1 rounded-full mt-2">
-                                    {{ $audiobook->category->name }}
-                                </p>
-                            @endif
-                        </div>
-                    </a>
-                    @else {{-- Display card without link if slug is missing --}}
-                         @if($audiobook->cover_image)
-                            <img src="{{ $audiobook->cover_image }}" alt="Cover image for {{ $audiobook->title }}" class="w-full h-64 object-cover">
-                        @else
-                            <div class="w-full h-64 bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
-                                <span class="text-gray-500 dark:text-gray-400">No Image</span>
-                            </div>
-                        @endif
-                        <div class="p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2 truncate" title="{{ $audiobook->title }}">{{ $audiobook->title }}</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">By: {{ $audiobook->author }}</p>
-                            @if($audiobook->narrator)
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Narrated by: {{ $audiobook->narrator }}</p>
-                            @endif
-                            @if($audiobook->category)
-                                <p class="text-xs text-gray-500 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 inline-block px-2 py-1 rounded-full mt-2">
-                                    {{ $audiobook->category->name }}
-                                </p>
-                            @endif
-                        </div>
-                    @endif
-                </div>
-            @endforeach
-        </div>
-    </section>
-    @endif
+                    </div>
+                @endforeach
+            </div>
+        </section>
+        @endif
+    @endunless {{-- End unless search query is present --}}
 
     {{-- Main content heading for the grid --}}
     <h1 id="audiobook-grid" class="text-4xl font-bold text-gray-700 dark:text-gray-300 mb-8 pt-8 border-t border-gray-200 dark:border-gray-700">All Audiobooks</h1>
