@@ -37,6 +37,30 @@
     }
     </script>
 
+    {{-- cookieconsent JS --}}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.js"></script>
+    <script>
+    window.addEventListener("load", function(){
+    window.cookieconsent.initialise({
+      "palette": {
+        "popup": {
+          "background": "#252e39"
+        },
+        "button": {
+          "background": "#14a7d0"
+        }
+      },
+      "theme": "edgeless",
+      "position": "bottom-right",
+      "content": {
+        "message": "This website uses cookies to ensure you get the best experience.",
+        "dismiss": "Got it!",
+        "link": "Learn more",
+        "href": "{{ route('pages.cookie-policy') }}" // Link to your Cookie Policy page
+      }
+    })});
+    </script>
+
     {{-- Additional head content can be yielded here --}}
     @stack('head')
 </head>
