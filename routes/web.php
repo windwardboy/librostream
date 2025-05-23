@@ -38,3 +38,6 @@ Route::get('/terms-of-service', function () {
 Route::get('/privacy-policy', function () {
     return view('pages.privacy');
 })->name('pages.privacy');
+
+// Contact Us Page
+Route::get('/contact', [App\Http\Controllers\ContactController::class, 'index'])->name('pages.contact');

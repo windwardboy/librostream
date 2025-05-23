@@ -28,6 +28,7 @@
                 {{-- Removed redundant Audiobooks link --}}
                 <a href="{{ url('/') }}#continue-listening-section" class="hover:text-blue-200 dark:hover:text-blue-300 px-3 py-2 rounded-md text-sm font-medium">Continue Listening</a>
                 <a href="{{ route('pages.about') }}" class="hover:text-blue-200 dark:hover:text-blue-300 px-3 py-2 rounded-md text-sm font-medium">About</a>
+                <a href="{{ route('pages.contact') }}" class="hover:text-blue-200 dark:hover:text-blue-300 px-3 py-2 rounded-md text-sm font-medium">Contact Us</a>
                 {{-- Add more links as needed --}}
             </nav>
         </div>
@@ -39,6 +40,7 @@
         {{-- Removed redundant Audiobooks link --}}
         <a href="{{ url('/') }}#continue-listening-section" class="block text-gray-200 dark:text-gray-300 hover:bg-blue-500 dark:hover:bg-blue-700 hover:text-white dark:hover:text-white px-3 py-2 rounded-md text-base font-medium">Continue Listening</a>
         <a href="{{ route('pages.about') }}" class="block text-gray-200 dark:text-gray-300 hover:bg-blue-500 dark:hover:bg-blue-700 hover:text-white dark:hover:text-white px-3 py-2 rounded-md text-base font-medium">About</a>
+        <a href="{{ route('pages.contact') }}" class="block text-gray-200 dark:text-gray-300 hover:bg-blue-500 dark:hover:bg-blue-700 hover:text-white dark:hover:text-white px-3 py-2 rounded-md text-base font-medium">Contact Us</a>
         {{-- Add more links as needed --}}
     </div>
 </header>
