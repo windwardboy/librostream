@@ -14,6 +14,22 @@
     {{-- Scripts and CSS --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    {{-- Organization Schema Markup --}}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Librostream",
+      "url": "{{ url('/') }}",
+      "logo": "{{ asset('images/logo.png') }}", {{-- Assuming you have a logo.png in public/images --}}
+      "sameAs": [
+        {{-- Add links to your social media profiles here if you have them --}}
+        {{-- "https://www.twitter.com/yourprofile", --}}
+        {{-- "https://www.facebook.com/yourprofile" --}}
+      ]
+    }
+    </script>
+
     {{-- Additional head content can be yielded here --}}
     @stack('head')
 </head>
