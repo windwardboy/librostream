@@ -8,6 +8,13 @@
     <title>@yield('title') - {{ config('app.name', 'Librostream') }}</title>
     <meta name="description" content="@yield('meta_description', config('app.name', 'Librostream') . ' is a free platform for streaming LibriVox audiobooks.')">
 
+    {{-- Favicons --}}
+    <link rel="icon" href="{{ asset('favicon-32x32.png') }}" sizes="32x32" type="image/png">
+    <link rel="icon" href="{{ asset('images/icons/favicon-96x96.png') }}" sizes="96x96" type="image/png">
+    <link rel="icon" href="{{ asset('images/icons/favicon-120x120.png') }}" sizes="120x120" type="image/png">
+    <link rel="apple-touch-icon" href="{{ asset('images/icons/apple-touch-icon.png') }}" sizes="180x180">
+    <link rel="icon" href="{{ asset('images/icons/favicon-512x512.png') }}" sizes="512x512" type="image/png">
+
     {{-- PWA Manifest --}}
     <link rel="manifest" href="/manifest.json">
 
