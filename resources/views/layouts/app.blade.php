@@ -66,5 +66,64 @@
             });
         }
     </script>
+
+    {{-- Custom Cookie Consent Banner --}}
+    <div id="cookie-consent-banner" class="fixed bottom-0 right-0 z-50 w-full md:max-w-sm bg-gray-800 text-white p-4 shadow-lg transform translate-y-full transition-transform duration-300 ease-in-out">
+        <div class="container mx-auto flex items-center justify-between">
+            <p class="text-sm mr-4">
+                This website uses cookies to ensure you get the best experience. <a href="{{ route('pages.cookie-policy') }}" class="text-indigo-400 hover:underline">Learn more</a>
+            </p>
+            <button id="accept-cookies" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 px-4 rounded">
+                Got it!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cookieBanner = document.getElementById('cookie-consent-banner');
+            const acceptButton = document.getElementById('accept-cookies');
+            const consentCookieName = 'cookie_consent';
+
+            // Function to set a cookie
+            function setCookie(name, value, days) {
+                let expires = "";
+                if (days) {
+                    const date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = "; expires=" + date.toUTCString();
+                }
+                document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+            }
+
+            // Function to get a cookie
+            function getCookie(name) {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for(let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+                }
+                return null;
+            }
+
+            // Check if consent cookie exists
+            if (!getCookie(consentCookieName)) {
+                // If not, show the banner after a short delay (for the transition)
+                setTimeout(() => {
+                    cookieBanner.classList.remove('translate-y-full');
+                }, 100); // Adjust delay as needed
+            }
+
+            // Add event listener to the accept button
+            acceptButton.addEventListener('click', function() {
+                setCookie(consentCookieName, 'true', 365); // Set cookie for 365 days
+                cookieBanner.classList.add('translate-y-full'); // Hide the banner
+                // Note: For full GDPR compliance with non-essential cookies (like GA),
+                // you would add logic here to load those scripts after consent.
+            });
+        });
+    </script>
 </body>
 </html>
