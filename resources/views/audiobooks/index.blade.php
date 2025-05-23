@@ -6,9 +6,9 @@
     {{-- Hero Section --}}
     <section class="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 text-white py-20 mb-12 rounded-lg shadow-xl">
         <div class="container mx-auto px-6 text-center">
-            <h2 class="text-5xl font-extrabold mb-4 leading-tight">Discover Your Next Favorite Audiobook</h2>
+            <h2 class="text-5xl font-extrabold mb-4 leading-tight">Stream Free Public Domain Audiobooks</h2>
             <p class="text-xl text-blue-100 dark:text-blue-200 mb-8">
-                Explore a vast collection of audiobooks across all genres. Dive into stories that inspire, entertain, and educate.
+                Explore a vast collection of audiobooks from LibriVox, all in the public domain and 100% free to stream.
             </p>
             {{-- Optional: Call to action button --}}
             {{-- <a href="#audiobook-grid" class="bg-white text-indigo-600 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition duration-300">Browse Collection</a> --}}
