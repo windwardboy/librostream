@@ -44,3 +44,6 @@ Route::get('/contact', [App\Http\Controllers\ContactController::class, 'index'])
 
 // FAQ Page
 Route::get('/faq', [App\Http\Controllers\FaqController::class, 'index'])->name('pages.faq');
+
+// Cookie Policy Page
+Route::get('/cookie-policy', [App\Http\Controllers\CookiePolicyController::class, 'index'])->name('pages.cookie-policy');

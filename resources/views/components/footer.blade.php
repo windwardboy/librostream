@@ -8,6 +8,8 @@
             <span class="text-xs text-gray-400 dark:text-gray-500">|</span>
             <a href="{{ route('pages.terms') }}" class="text-xs text-gray-600 dark:text-gray-400 hover:underline">Terms of Service</a>
             <span class="text-xs text-gray-400 dark:text-gray-500">|</span>
+            <a href="{{ route('pages.cookie-policy') }}" class="text-xs text-gray-600 dark:text-gray-400 hover:underline">Cookie Policy</a>
+            <span class="text-xs text-gray-400 dark:text-gray-500">|</span>
             <a href="#" class="text-xs text-gray-600 dark:text-gray-400 hover:underline">Back to top</a>
             {{-- Add more legal links as needed --}}
         </nav>
