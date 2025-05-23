@@ -2,6 +2,8 @@
 
 @section('title', 'Privacy Policy')
 
+@section('meta_description', 'Read the Privacy Policy for the Librostream audiobook streaming service.')
+
 @section('content')
     <div class="container mx-auto px-6 py-8">
         <h1 class="text-4xl font-bold text-gray-700 dark:text-gray-300 mb-8">Privacy Policy</h1> {{-- Added styling --}}

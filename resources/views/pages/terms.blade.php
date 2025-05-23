@@ -2,6 +2,8 @@
 
 @section('title', 'Terms of Service')
 
+@section('meta_description', 'Read the Terms of Service for the Librostream audiobook streaming service.')
+
 @section('content')
     <div class="container mx-auto px-6 py-8">
         <h1 class="text-4xl font-bold text-gray-700 dark:text-gray-300 mb-8">Terms of Service</h1> {{-- Added styling --}}
