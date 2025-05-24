@@ -3,6 +3,43 @@
 @section('title', $audiobook->title . ' by ' . $audiobook->author)
 @section('meta_description', Str::limit($audiobook->description, 160))
 
+@push('head')
+{{-- Audiobook Schema Markup --}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Audiobook",
+  "name": "{{ $audiobook->title }}",
+  "author": {
+    "@type": "Person",
+    "name": "{{ $audiobook->author }}"
+  },
+  @if($audiobook->narrator)
+  "narrator": {
+    "@type": "Person",
+    "name": "{{ $audiobook->narrator }}"
+  },
+  @endif
+  @if($audiobook->category)
+  "genre": "{{ $audiobook->category->name }}",
+  @endif
+  "description": "{{ Str::limit(strip_tags($audiobook->description), 500) }}", {{-- Use stripped and limited description --}}
+  "url": "{{ route('audiobooks.show', $audiobook->slug) }}",
+  @if($audiobook->cover_image)
+  "image": "{{ $audiobook->cover_image }}",
+  @endif
+  @if($audiobook->duration)
+  "duration": "{{ $audiobook->duration }}", {{-- Assuming duration is in ISO 8601 format (e.g., PT1H30M) or similar --}}
+  @endif
+  "publisher": {
+    "@type": "Organization",
+    "name": "LibriVox" {{-- Assuming LibriVox is the publisher --}}
+  }
+  {{-- Add more properties like aggregateRating, review, offers if available --}}
+}
+</script>
+@endpush
+
 @section('content')
 <div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6 md:p-8" data-audiobook-slug="{{ $audiobook->slug }}" itemscope itemtype="https://schema.org/Audiobook">
     <div class="mb-6">
