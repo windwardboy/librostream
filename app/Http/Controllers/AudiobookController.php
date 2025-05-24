@@ -149,29 +149,29 @@ class AudiobookController extends Controller
             ->where(function ($query) use ($tagSlug) {
                 // Match category name (slugified)
                 $query->whereHas('category', function ($q) use ($tagSlug) {
-                    // Attempt to mimic Str::slug() for comparison, including removing asterisks
-                    $q->where(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(name, '''', ''), ' ', '-'), '*', ''))"), 'LIKE', $tagSlug);
+                    // Attempt to mimic Str::slug() for comparison, including replacing spaces, apostrophes, asterisks, and ampersands
+                    $q->where(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(name, '''', ''), ' ', '-'), '*', ''), '&', '-'))"), 'LIKE', $tagSlug);
                 });
                 // Match author (slugified)
-                $query->orWhere(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(author, '''', ''), ' ', '-'), '*', ''))"), 'LIKE', $tagSlug);
+                $query->orWhere(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(author, '''', ''), ' ', '-'), '*', ''), '&', '-'))"), 'LIKE', $tagSlug);
                 // Match narrator (slugified)
-                $query->orWhere(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(narrator, '''', ''), ' ', '-'), '*', ''))"), 'LIKE', $tagSlug);
+                $query->orWhere(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(narrator, '''', ''), ' ', '-'), '*', ''), '&', '-'))"), 'LIKE', $tagSlug);
             })
             ->orderBy('title')
             ->paginate(12);
 
         // Determine a display name for the tag
         // Try to find a category with a matching slug first
-        $category = Category::where(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(name, '''', ''), ' ', '-'), '*', ''))"), 'LIKE', $tagSlug)->first();
+        $category = Category::where(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(name, '''', ''), ' ', '-'), '*', ''), '&', '-'))"), 'LIKE', $tagSlug)->first();
         if ($category) {
             $tagName = $category->name;
         } else {
              // If no category matches the slug, try to find a matching author or narrator
-             $author = Audiobook::select('author')->distinct()->where(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(author, '''', ''), ' ', '-'), '*', ''))"), 'LIKE', $tagSlug)->first();
+             $author = Audiobook::select('author')->distinct()->where(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(author, '''', ''), ' ', '-'), '*', ''), '&', '-'))"), 'LIKE', $tagSlug)->first();
              if ($author) {
                  $tagName = $author->author;
              } else {
-                 $narrator = Audiobook::select('narrator')->distinct()->where(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(narrator, '''', ''), ' ', '-'), '*', ''))"), 'LIKE', $tagSlug)->first();
+                 $narrator = Audiobook::select('narrator')->distinct()->where(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(narrator, '''', ''), ' ', '-'), '*', ''), '&', '-'))"), 'LIKE', $tagSlug)->first();
                  if ($narrator) {
                      $tagName = $narrator->narrator;
                  } else {
