@@ -142,13 +142,13 @@
                 <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Tags:</h3>
                 <div class="flex flex-wrap gap-2">
                     @if($audiobook->category)
-                        <span class="text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-full">{{ $audiobook->category->name }}</span>
+                        <a href="{{ route('audiobooks.byTag', ['tag' => Str::slug($audiobook->category->name)]) }}" class="text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-full hover:underline">{{ $audiobook->category->name }}</a>
                     @endif
                     @if($audiobook->author)
-                        <span class="text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-full">{{ $audiobook->author }}</span>
+                        <a href="{{ route('audiobooks.byTag', ['tag' => Str::slug($audiobook->author)]) }}" class="text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-full hover:underline">{{ $audiobook->author }}</a>
                     @endif
                     @if($audiobook->narrator)
-                        <span class="text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-full">{{ $audiobook->narrator }}</span>
+                        <a href="{{ route('audiobooks.byTag', ['tag' => Str::slug($audiobook->narrator)]) }}" class="text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-full hover:underline">{{ $audiobook->narrator }}</a>
                     @endif
                     {{-- Add more tags here if other relevant metadata fields exist (e.g., subjects, keywords, year) --}}
                 </div>
