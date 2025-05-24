@@ -6,6 +6,7 @@ use App\Models\Audiobook;
 use App\Models\Category; // Import the Category model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; // Import DB facade
+use Illuminate\Support\Str; // Import Str facade for slugification
 
 class AudiobookController extends Controller
 {
@@ -159,12 +160,12 @@ class AudiobookController extends Controller
             ->paginate(12);
 
         // Determine a display name for the tag
-        // Try to find a category with a matching slug first
-        $category = Category::where(DB::raw('LOWER(REPLACE(name, " ", "-"))'), 'LIKE', strtolower($tag))->first();
+        // Try to find a category with a matching name (case-insensitive) first
+        $category = Category::where(DB::raw('LOWER(name)'), 'LIKE', $comparableTag)->first();
         if ($category) {
             $tagName = $category->name;
         } else {
-             // If no category matches the slug, use the comparable tag string for display
+             // If no category matches the comparable tag, use the comparable tag string for display
              $tagName = ucwords($comparableTag); // Capitalize words for display
         }
 
