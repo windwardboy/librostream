@@ -25,6 +25,23 @@
         {{-- Right Column: Details (excluding player/sections) --}}
         <div class="md:w-2/3">
             <h1 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-white mb-2" itemprop="name">{{ $audiobook->title }}</h1>
+
+            {{-- Auto-generated introductory sentence --}}
+            <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
+                Dive into "{{ $audiobook->title }}", a classic
+                @if($audiobook->category)
+                    <span class="font-semibold">{{ $audiobook->category->name }}</span>
+                @else
+                    audiobook
+                @endif
+                by <span class="font-semibold">{{ $audiobook->author }}</span>
+                @if($audiobook->narrator)
+                    narrated by <span class="font-semibold">{{ $audiobook->narrator }}</span>
+                @endif
+                .
+            </p>
+
+            {{-- Basic Metadata Display --}}
             <p class="text-lg text-gray-600 dark:text-gray-400 mb-1">By: <span class="font-semibold" itemprop="author" itemscope itemtype="https://schema.org/Person"><span itemprop="name">{{ $audiobook->author }}</span></span></p>
             @if($audiobook->narrator)
             <p class="text-lg text-gray-600 dark:text-gray-400 mb-4">Narrated by: <span class="font-semibold" itemprop="narrator" itemscope itemtype="https://schema.org/Person"><span itemprop="name">{{ $audiobook->narrator }}</span></span></p>
@@ -36,8 +53,17 @@
                     <span class="text-sm bg-indigo-100 dark:bg-indigo-700 text-indigo-700 dark:text-indigo-200 px-3 py-1 rounded-full" itemprop="genre">{{ $audiobook->category->name }}</span>
                 </p>
             @endif
-            
+
             <p class="text-md text-gray-700 dark:text-gray-300 mb-4"><strong>Duration:</strong> <span itemprop="duration">{{ $audiobook->duration ?? 'N/A' }}</span></p>
+
+            {{-- Templated "Why we love this" box --}}
+            <div class="bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500 dark:border-blue-700 text-blue-700 dark:text-blue-300 p-4 mb-6" role="alert">
+                <p class="font-bold">Why We Love This Audiobook</p>
+                <p class="text-sm">
+                    At Librostream, we're passionate about bringing you timeless stories like "{{ $audiobook->title }}". Freely available and beautifully narrated, it's a perfect example of the literary treasures waiting to be discovered in the public domain.
+                </p>
+            </div>
+
 
             <div class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mb-6 w-full" itemprop="description"> {{-- Added w-full --}}
                 <h3 class="text-xl font-semibold mb-2">Description:</h3>
