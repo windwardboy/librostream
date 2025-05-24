@@ -139,34 +139,46 @@ class AudiobookController extends Controller
      */
     public function byTag($tag)
     {
-        // Convert the incoming tag slug back to a comparable string
-        $comparableTag = str_replace('-', ' ', strtolower($tag));
+        // Use the incoming tag slug directly for comparison in the database query
+        $tagSlug = strtolower($tag);
 
-        // Query audiobooks where lowercased category name, author, or narrator matches the comparable tag string
+        // Query audiobooks where the slugified category name, author, or narrator matches the tag slug
         $audiobooks = Audiobook::query()
             ->with('category')
             ->whereNotNull('slug')
-            ->where(function ($query) use ($comparableTag) {
-                // Match category name (case-insensitive)
-                $query->whereHas('category', function ($q) use ($comparableTag) {
-                    $q->where(DB::raw('LOWER(name)'), 'LIKE', $comparableTag);
+            ->where(function ($query) use ($tagSlug) {
+                // Match category name (slugified)
+                $query->whereHas('category', function ($q) use ($tagSlug) {
+                    // Attempt to mimic Str::slug() for comparison
+                    $q->where(DB::raw("LOWER(REPLACE(REPLACE(name, '''', ''), ' ', '-'))"), 'LIKE', $tagSlug);
                 });
-                // Match author (case-insensitive)
-                $query->orWhere(DB::raw('LOWER(author)'), 'LIKE', $comparableTag);
-                // Match narrator (case-insensitive)
-                $query->orWhere(DB::raw('LOWER(narrator)'), 'LIKE', $comparableTag);
+                // Match author (slugified)
+                $query->orWhere(DB::raw("LOWER(REPLACE(REPLACE(author, '''', ''), ' ', '-'))"), 'LIKE', $tagSlug);
+                // Match narrator (slugified)
+                $query->orWhere(DB::raw("LOWER(REPLACE(REPLACE(narrator, '''', ''), ' ', '-'))"), 'LIKE', $tagSlug);
             })
             ->orderBy('title')
             ->paginate(12);
 
         // Determine a display name for the tag
-        // Try to find a category with a matching name (case-insensitive) first
-        $category = Category::where(DB::raw('LOWER(name)'), 'LIKE', $comparableTag)->first();
+        // Try to find a category with a matching slug first
+        $category = Category::where(DB::raw("LOWER(REPLACE(REPLACE(name, '''', ''), ' ', '-'))"), 'LIKE', $tagSlug)->first();
         if ($category) {
             $tagName = $category->name;
         } else {
-             // If no category matches the comparable tag, use the comparable tag string for display
-             $tagName = ucwords($comparableTag); // Capitalize words for display
+             // If no category matches the slug, try to find a matching author or narrator
+             $author = Audiobook::select('author')->distinct()->where(DB::raw("LOWER(REPLACE(REPLACE(author, '''', ''), ' ', '-'))"), 'LIKE', $tagSlug)->first();
+             if ($author) {
+                 $tagName = $author->author;
+             } else {
+                 $narrator = Audiobook::select('narrator')->distinct()->where(DB::raw("LOWER(REPLACE(REPLACE(narrator, '''', ''), ' ', '-'))"), 'LIKE', $tagSlug)->first();
+                 if ($narrator) {
+                     $tagName = $narrator->narrator;
+                 } else {
+                     // If no match found, use the cleaned slug for display
+                     $tagName = ucwords(str_replace('-', ' ', $tag));
+                 }
+             }
         }
 
         // Pass audiobooks and tag name to the view
