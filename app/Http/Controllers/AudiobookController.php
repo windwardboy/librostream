@@ -138,8 +138,38 @@ class AudiobookController extends Controller
      */
     public function byTag($tag)
     {
-        // Placeholder logic for now
-        return "Listing audiobooks for tag: " . $tag;
+        // Query audiobooks where slugified category name, author, or narrator matches the tag slug
+        $audiobooks = Audiobook::query()
+            ->with('category')
+            ->whereNotNull('slug')
+            ->where(function ($query) use ($tag) {
+                // Match category slug
+                $query->whereHas('category', function ($q) use ($tag) {
+                    // Using a simple slugification approximation for matching
+                    $q->where(DB::raw('LOWER(REPLACE(name, " ", "-"))'), 'LIKE', strtolower($tag));
+                });
+                // Match author slug
+                $query->orWhere(DB::raw('LOWER(REPLACE(author, " ", "-"))'), 'LIKE', strtolower($tag));
+                // Match narrator slug
+                $query->orWhere(DB::raw('LOWER(REPLACE(narrator, " ", "-"))'), 'LIKE', strtolower($tag));
+            })
+            ->orderBy('title')
+            ->paginate(12);
+
+        // Attempt to determine a display name for the tag (can be refined later)
+        $tagName = str_replace('-', ' ', $tag); // Start with slug, replace hyphens with spaces
+        $category = Category::where(DB::raw('LOWER(REPLACE(name, " ", "-"))'), 'LIKE', strtolower($tag))->first();
+        if ($category) {
+            $tagName = $category->name;
+        } else {
+             // Could add logic here to try and find a matching author/narrator name if needed
+             // For now, just use the cleaned slug if no category matches
+             $tagName = ucwords($tagName); // Capitalize words
+        }
+
+
+        // Pass audiobooks and tag name to a new view
+        return view('audiobooks.by-tag', compact('audiobooks', 'tagName'));
     }
 
     /**
