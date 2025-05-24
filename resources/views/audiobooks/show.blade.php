@@ -8,14 +8,15 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "Audiobook",
+  "@type": ["Audiobook", "Book"], {{-- Added Book type --}}
+  "bookFormat": "https://schema.org/AudiobookFormat", {{-- Added bookFormat --}}
   "name": "{{ $audiobook->title }}",
   "author": {
     "@type": "Person",
     "name": "{{ $audiobook->author }}"
   },
   @if($audiobook->narrator)
-  "narrator": {
+  "readBy": { {{-- Changed from narrator to readBy --}}
     "@type": "Person",
     "name": "{{ $audiobook->narrator }}"
   },
@@ -23,25 +24,54 @@
   @if($audiobook->category)
   "genre": "{{ $audiobook->category->name }}",
   @endif
-  "description": @json(Str::limit(strip_tags($audiobook->description), 500)), {{-- Use stripped and limited description and ensure valid JSON --}}
+  @if($audiobook->description)
+  "description": @json(Str::limit(strip_tags($audiobook->description), 500)), {{-- Fixed json_encode syntax and ensure valid JSON --}}
+  @endif
   "url": "{{ route('audiobooks.show', $audiobook->slug) }}",
   @if($audiobook->cover_image)
   "image": "{{ $audiobook->cover_image }}",
   @endif
   @if($audiobook->duration)
-  "duration": "PT{{ str_replace(':', 'H', substr($audiobook->duration, 0, -3)) }}M{{ substr($audiobook->duration, -2) }}S", {{-- Convert HH:MM:SS to ISO 8601 PT#H#M#S --}}
+    @php
+        // Convert HH:MM:SS duration string to ISO 8601 PT#H#M#S format
+        $durationParts = explode(':', $audiobook->duration);
+        $formattedDuration = 'PT';
+        if (isset($durationParts[0]) && (int)$durationParts[0] > 0) {
+            $formattedDuration .= (int)$durationParts[0] . 'H';
+        }
+        if (isset($durationParts[1]) && (int)$durationParts[1] > 0) {
+            $formattedDuration .= (int)$durationParts[1] . 'M';
+        }
+        if (isset($durationParts[2]) && (int)$durationParts[2] > 0) {
+            $formattedDuration .= (int)$durationParts[2] . 'S';
+        }
+        // Handle cases where duration might be "00:00:00" or similar
+        if ($formattedDuration === 'PT') {
+            $formattedDuration = 'PT0S';
+        }
+    @endphp
+  "duration": "{{ $formattedDuration }}", {{-- Use converted ISO 8601 duration --}}
   @endif
   "publisher": {
     "@type": "Organization",
-    "name": "LibriVox" {{-- Assuming LibriVox is the publisher --}}
+    "name": "LibriVox",
+    "url": "https://librivox.org" {{-- Added LibriVox URL --}}
+  },
+  "offers": { {{-- Added offers property --}}
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/InStock",
+    "url": "{{ route('audiobooks.show', $audiobook->slug) }}"
   }
-  {{-- Add more properties like aggregateRating, review, offers if available --}}
+  {{-- Add more properties like aggregateRating, review if available --}}
 }
 </script>
 @endpush
 
 @section('content')
-<div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6 md:p-8" data-audiobook-slug="{{ $audiobook->slug }}" > {{-- Removed itemscope and itemtype --}}
+{{-- Removed itemscope and itemtype from this div as JSON-LD is preferred --}}
+<div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6 md:p-8" data-audiobook-slug="{{ $audiobook->slug }}" >
     <div class="mb-6">
         <a href="{{ route('audiobooks.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">&laquo; Back to All Audiobooks</a>
     </div>
@@ -130,7 +160,7 @@
         </div>
     </div>
 
-    {{-- Audio Sections List (Full Width Below Player) --}}
+    {{-- Audio Sections List (Full Width Below Top Section) --}}
     <div class="mt-6 w-full">
         <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Audio Sections:</h3>
         @if($audiobook->sections->count() > 0)
