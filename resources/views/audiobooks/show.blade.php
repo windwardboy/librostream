@@ -23,13 +23,13 @@
   @if($audiobook->category)
   "genre": "{{ $audiobook->category->name }}",
   @endif
-  "description": "{{ Str::limit(strip_tags($audiobook->description), 500) }}", {{-- Use stripped and limited description --}}
+  "description": @json(Str::limit(strip_tags($audiobook->description), 500)), {{-- Use stripped and limited description and ensure valid JSON --}}
   "url": "{{ route('audiobooks.show', $audiobook->slug) }}",
   @if($audiobook->cover_image)
   "image": "{{ $audiobook->cover_image }}",
   @endif
   @if($audiobook->duration)
-  "duration": "{{ $audiobook->duration }}", {{-- Assuming duration is in ISO 8601 format (e.g., PT1H30M) or similar --}}
+  "duration": "PT{{ str_replace(':', 'H', substr($audiobook->duration, 0, -3)) }}M{{ substr($audiobook->duration, -2) }}S", {{-- Convert HH:MM:SS to ISO 8601 PT#H#M#S --}}
   @endif
   "publisher": {
     "@type": "Organization",
@@ -41,7 +41,7 @@
 @endpush
 
 @section('content')
-<div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6 md:p-8" data-audiobook-slug="{{ $audiobook->slug }}" itemscope itemtype="https://schema.org/Audiobook">
+<div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6 md:p-8" data-audiobook-slug="{{ $audiobook->slug }}" > {{-- Removed itemscope and itemtype --}}
     <div class="mb-6">
         <a href="{{ route('audiobooks.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">&laquo; Back to All Audiobooks</a>
     </div>
