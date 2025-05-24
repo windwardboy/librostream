@@ -131,6 +131,18 @@ class AudiobookController extends Controller
     }
 
     /**
+     * Display a listing of audiobooks by a specific tag.
+     *
+     * @param  string  $tag
+     * @return \Illuminate\Http\Response
+     */
+    public function byTag($tag)
+    {
+        // Placeholder logic for now
+        return "Listing audiobooks for tag: " . $tag;
+    }
+
+    /**
      * Show the form for editing the specified resource.
      *
      * @param  int  $id

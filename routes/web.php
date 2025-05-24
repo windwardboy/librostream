@@ -21,6 +21,9 @@ Route::get('/', [AudiobookController::class, 'index'])->name('audiobooks.index')
 // Using {audiobook:slug} for route model binding by slug
 Route::get('/audiobooks/{audiobook:slug}', [AudiobookController::class, 'show'])->name('audiobooks.show');
 
+// Route for listing audiobooks by tag (category, author, narrator, etc.)
+Route::get('/audiobooks/tag/{tag}', [AudiobookController::class, 'byTag'])->name('audiobooks.byTag');
+
 // We can keep the welcome route for now, or remove it if the homepage will be the audiobook list.
 // Route::get('/welcome-laravel', function () {
 //     return view('welcome');
