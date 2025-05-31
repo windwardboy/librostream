@@ -147,9 +147,9 @@ class AudiobookController extends Controller
             ->with('category')
             ->whereNotNull('slug')
             ->where(function ($query) use ($tagSlug) {
-                // Attempt to mimic Str::slug() for comparison, including replacing spaces, apostrophes, asterisks, ampersands, commas, and collapsing hyphens
+                // Match category by slug
                 $query->whereHas('category', function ($q) use ($tagSlug) {
-                    $q->where(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(name, '''', ''), ',', '-'), '&', ''), ' ', '-'), '*', ''), '--', '-'), '--', '-'))"), 'LIKE', $tagSlug);
+                    $q->where('slug', $tagSlug);
                 });
                 // Match author (slugified)
                 $query->orWhere(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(author, '''', ''), ',', '-'), '&', ''), ' ', '-'), '*', ''), '--', '-'), '--', '-'))"), 'LIKE', $tagSlug);
@@ -161,7 +161,7 @@ class AudiobookController extends Controller
 
         // Determine a display name for the tag
         // Try to find a category with a matching slug first
-        $category = Category::where(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(name, '''', ''), ',', '-'), '&', ''), ' ', '-'), '*', ''), '--', '-'), '--', '-'))"), 'LIKE', $tagSlug)->first();
+        $category = Category::where('slug', $tagSlug)->first();
         if ($category) {
             $tagName = $category->name;
         } else {
