@@ -81,8 +81,17 @@ class FetchLibriVoxAudiobooks extends Command
             $categoryName = 'Uncategorized'; // Default category
             if (!empty($apiBook['genres']) && !empty($apiBook['genres'][0]['name'])) {
                 $categoryName = trim($apiBook['genres'][0]['name']);
+            } else {
+                 $categoryName = 'Uncategorized'; // Default category
             }
-            $category = Category::firstOrCreate(['name' => $categoryName]);
+
+            // Generate slug for the category
+            $categorySlug = Str::slug($categoryName);
+
+            $category = Category::firstOrCreate(
+                ['name' => $categoryName],
+                ['slug' => $categorySlug] // Save the generated slug
+            );
 
             // Author
             $authorName = 'Unknown Author';
