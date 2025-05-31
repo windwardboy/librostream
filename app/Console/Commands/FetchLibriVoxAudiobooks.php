@@ -252,7 +252,7 @@ class FetchLibriVoxAudiobooks extends Command
                     $sectionData = [
                         'audiobook_id' => $book->id,
                         'section_number' => (int) $apiSection['section_number'],
-                        'title' => trim($apiSection['title']),
+                        'title' => trim(strip_tags($apiSection['title'])), // Strip HTML tags
                         'source_url' => $apiSection['listen_url'],
                         'duration' => $sectionDurationStr,
                         'reader_name' => $sectionReaderName, // Add reader name
