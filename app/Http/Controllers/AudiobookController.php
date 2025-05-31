@@ -142,7 +142,7 @@ class AudiobookController extends Controller
         // Use the incoming tag slug directly for comparison in the database query
         $tagSlug = strtolower($tag);
 
-        // Query audiobooks where the slugified category name, author, or narrator matches the tag slug
+        // Query audiobooks where the category slug, slugified author, or slugified narrator matches the tag slug
         $audiobooks = Audiobook::query()
             ->with('category')
             ->whereNotNull('slug')
@@ -151,9 +151,9 @@ class AudiobookController extends Controller
                 $query->whereHas('category', function ($q) use ($tagSlug) {
                     $q->where('slug', $tagSlug);
                 });
-                // Match author (slugified)
+                // OR Match author (slugified)
                 $query->orWhere(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(author, '''', ''), ',', '-'), '&', ''), ' ', '-'), '*', ''), '--', '-'), '--', '-'))"), 'LIKE', $tagSlug);
-                // Match narrator (slugified)
+                // OR Match narrator (slugified)
                 $query->orWhere(DB::raw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(narrator, '''', ''), ',', '-'), '&', ''), ' ', '-'), '*', ''), '--', '-'), '--', '-'))"), 'LIKE', $tagSlug);
             })
             ->orderBy('title')
