@@ -93,6 +93,14 @@ class FetchLibriVoxAudiobooks extends Command
                 ['slug' => $categorySlug] // Save the generated slug
             );
 
+            // If the category already existed but didn't have a slug, update it
+            if (!$category->wasRecentlyCreated && (is_null($category->slug) || $category->slug !== $categorySlug)) {
+                $category->slug = $categorySlug;
+                $category->save();
+                $this->info("Populated/Updated slug for category: {$category->name} (Slug: {$category->slug})");
+            }
+
+
             // Author
             $authorName = 'Unknown Author';
             if (!empty($apiBook['authors']) && !empty($apiBook['authors'][0]['last_name'])) {
