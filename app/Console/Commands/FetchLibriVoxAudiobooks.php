@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Audiobook;
+use App\Models\AudiobookSection; // Import the AudiobookSection model
 use App\Models\Category;
 use App\Services\LibriVoxService;
 use Illuminate\Console\Command;
@@ -241,13 +242,11 @@ class FetchLibriVoxAudiobooks extends Command
 
             // Process Sections
             if (!empty($apiBook['sections'])) {
-                // Delete existing sections for this book to avoid duplicates on update
-                $book->sections()->delete();
-
+                // Use updateOrCreate for sections based on audiobook_id and librivox_section_id
                 foreach ($apiBook['sections'] as $apiSection) {
-                    // Skip section if no listen_url is found
-                    if (empty($apiSection['listen_url'])) {
-                         $this->warn("Skipping section '{$apiSection['title']}' for book '{$apiBook['title']}' (ID: {$apiBook['id']}) due to missing source_url.");
+                    // Skip section if no listen_url is found or librivox_section_id is missing
+                    if (empty($apiSection['listen_url']) || empty($apiSection['id'])) {
+                         $this->warn("Skipping section '{$apiSection['title']}' for book '{$apiBook['title']}' (ID: {$apiBook['id']}) due to missing source_url or librivox_section_id.");
                          continue;
                     }
 
@@ -265,7 +264,6 @@ class FetchLibriVoxAudiobooks extends Command
                         $sectionReaderName = trim($apiSection['readers'][0]['display_name']);
                     }
 
-
                     $sectionData = [
                         'audiobook_id' => $book->id,
                         'section_number' => (int) $apiSection['section_number'],
@@ -273,11 +271,14 @@ class FetchLibriVoxAudiobooks extends Command
                         'source_url' => $apiSection['listen_url'],
                         'duration' => $sectionDurationStr,
                         'reader_name' => $sectionReaderName, // Add reader name
-                        'librivox_section_id' => $apiSection['id'] ?? null,
+                        'librivox_section_id' => $apiSection['id'], // Ensure librivox_section_id is used
                     ];
 
-                    // Create the section record
-                    $book->sections()->create($sectionData);
+                    // Use updateOrCreate based on audiobook_id and librivox_section_id
+                    AudiobookSection::updateOrCreate(
+                        ['audiobook_id' => $book->id, 'librivox_section_id' => $apiSection['id']],
+                        $sectionData
+                    );
                 }
             } else {
                  $this->warn("No sections found for book '{$apiBook['title']}' (ID: {$apiBook['id']}).");
