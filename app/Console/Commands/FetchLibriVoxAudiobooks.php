@@ -158,7 +158,7 @@ class FetchLibriVoxAudiobooks extends Command
             if (!empty($apiBook['url_rss'])) {
                 $this->info("Attempting to fetch cover image for '{$apiBook['title']}' from RSS URL: {$apiBook['url_rss']}");
                 try {
-                    $response = Http::timeout(10)->get($apiBook['url_rss']);
+                    $response = Http::timeout(60)->get($apiBook['url_rss']); // Increased timeout to 60 seconds
 
                     if ($response->successful()) {
                         $this->info("Successfully fetched RSS URL. Parsing HTML...");
@@ -260,9 +260,21 @@ class FetchLibriVoxAudiobooks extends Command
 
                     // Reader Name for section
                     $sectionReaderName = 'Unknown Reader';
-                    if (!empty($apiSection['readers']) && !empty($apiSection['readers'][0]['display_name'])) {
-                        $sectionReaderName = trim($apiSection['readers'][0]['display_name']);
+                    if (!empty($apiSection['readers']) && !empty($apiBook['sections'][0]['readers'][0]['display_name'])) {
+                        // Check if all readers are the same for all sections (simplistic check)
+                        $firstReader = $apiBook['sections'][0]['readers'][0]['display_name'];
+                        $allSameReader = true;
+                        foreach ($apiBook['sections'] as $section) {
+                            if (empty($section['readers']) || empty($section['readers'][0]['display_name']) || $section['readers'][0]['display_name'] !== $firstReader) {
+                                $allSameReader = false;
+                                break;
+                            }
+                        }
+                        if ($allSameReader) {
+                            $narratorName = $firstReader;
+                        }
                     }
+
 
                     $sectionData = [
                         'audiobook_id' => $book->id,
