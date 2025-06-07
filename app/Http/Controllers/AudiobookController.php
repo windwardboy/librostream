@@ -58,8 +58,14 @@ class AudiobookController extends Controller
                               ->orderBy('language')
                               ->pluck('language');
 
+        // Fetch counts for the features widget
+        $totalAudiobooks = Audiobook::count();
+        $uniqueLanguages = Audiobook::distinct('language')->whereNotNull('language')->count();
+        // Assuming narrators are stored in the 'narrator' column of the audiobooks table
+        $uniqueReaders = Audiobook::distinct('narrator')->whereNotNull('narrator')->count();
 
-        return view('audiobooks.index', compact('audiobooks', 'categories', 'latestAudiobooks', 'languages'));
+
+        return view('audiobooks.index', compact('audiobooks', 'categories', 'latestAudiobooks', 'languages', 'totalAudiobooks', 'uniqueLanguages', 'uniqueReaders'));
     }
 
     /**
