@@ -15,6 +15,15 @@
         </div>
     </section>
 
+    {{-- Features Widget --}}
+    @if(isset($totalAudiobooks, $uniqueLanguages, $uniqueReaders))
+        <x-features-widget
+            :totalAudiobooks="$totalAudiobooks"
+            :uniqueLanguages="$uniqueLanguages"
+            :uniqueReaders="$uniqueReaders"
+        />
+    @endif
+
     {{-- Continue Listening Section (Populated by JS) --}}
     <section id="continue-listening-section" class="mb-12 hidden"> {{-- Hidden by default, shown by JS if items exist --}}
         <h2 class="text-3xl font-bold text-gray-700 dark:text-gray-300 mb-6">Continue Listening</h2>
@@ -136,6 +145,7 @@
             {{ $audiobooks->appends(request()->query())->links() }}
         </div>
     @endif {{-- End if not search query and latest audiobooks exist --}}
+    @endunless {{-- This was missing --}}
 
     {{-- Main content heading for the grid --}}
     <h1 id="audiobook-grid" class="text-4xl font-bold text-gray-700 dark:text-gray-300 mb-8 pt-8 border-t border-gray-200 dark:border-gray-700">All Audiobooks</h1>
@@ -202,7 +212,7 @@
 <script id="audiobook-data-json" type="application/json">
     {
         "audiobooks": @json($audiobooks->items()), {{-- Pass only the items for the current page --}}
-        "latestAudiobooks": @json($latestAudiobooks)
+        "latestAudiobooks": @json($latestAudiobooks ?? []) {{-- Added null coalescing as fallback --}}
     }
 </script>
 @endpush
