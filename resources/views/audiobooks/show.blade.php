@@ -260,8 +260,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create mini-player container
     const miniPlayerContainer = document.createElement('div');
     miniPlayerContainer.id = 'mini-player';
-    // Use 'hidden' for initial state, and 'lg:hidden' to hide on large screens and up
-    miniPlayerContainer.className = 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg border-t border-gray-200 dark:border-gray-700 p-2 hidden lg:hidden z-50';
+    // Use 'lg:hidden' to hide on large screens and up, making it visible on smaller screens by default
+    miniPlayerContainer.className = 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg border-t border-gray-200 dark:border-gray-700 p-2 lg:hidden z-50';
     
     // Create a clone of the main player for the mini-player
     const miniPlayer = mainPlayer.cloneNode(true);
