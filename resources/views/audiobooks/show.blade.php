@@ -207,7 +207,7 @@
         </div>
     </div>
 
-    <!-- Replace your current audio player with this -->
+    <!-- Main Audio Player Container -->
     <div id="main-audio-container" class="my-6 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg sticky top-4 z-10">
         <audio controls class="w-full" id="main-audio-player">
             Your browser does not support the audio element.
@@ -254,15 +254,19 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Clone the main player
+    const mainAudioContainer = document.getElementById('main-audio-container');
     const mainPlayer = document.getElementById('main-audio-player');
-    const miniPlayer = mainPlayer.cloneNode(true);
-    miniPlayer.id = 'mini-audio-player';
     
     // Create mini-player container
     const miniPlayerContainer = document.createElement('div');
     miniPlayerContainer.id = 'mini-player';
-    miniPlayerContainer.className = 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg border-t border-gray-200 dark:border-gray-700 p-2 hidden md:hidden';
+    // Use 'hidden' for initial state, and 'lg:hidden' to hide on large screens and up
+    miniPlayerContainer.className = 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg border-t border-gray-200 dark:border-gray-700 p-2 hidden lg:hidden z-50';
+    
+    // Create a clone of the main player for the mini-player
+    const miniPlayer = mainPlayer.cloneNode(true);
+    miniPlayer.id = 'mini-audio-player';
+    miniPlayer.classList.add('w-full'); // Ensure mini-player also takes full width
     miniPlayerContainer.appendChild(miniPlayer);
     document.body.appendChild(miniPlayerContainer);
     
@@ -272,18 +276,45 @@ document.addEventListener('DOMContentLoaded', function() {
         miniPlayer.play();
     });
     mainPlayer.addEventListener('pause', () => miniPlayer.pause());
+    mainPlayer.addEventListener('timeupdate', () => {
+        if (Math.abs(mainPlayer.currentTime - miniPlayer.currentTime) > 0.5) {
+            miniPlayer.currentTime = mainPlayer.currentTime;
+        }
+    });
+
     miniPlayer.addEventListener('play', () => {
         mainPlayer.currentTime = miniPlayer.currentTime;
-        miniPlayer.play();
+        mainPlayer.play();
     });
     miniPlayer.addEventListener('pause', () => mainPlayer.pause());
+    miniPlayer.addEventListener('timeupdate', () => {
+        if (Math.abs(miniPlayer.currentTime - mainPlayer.currentTime) > 0.5) {
+            mainPlayer.currentTime = miniPlayer.currentTime;
+        }
+    });
     
-    // Show/hide based on scroll
+    // Show/hide mini-player based on scroll and screen size
     window.addEventListener('scroll', function() {
-        const mainPlayerRect = document.getElementById('main-audio-container').getBoundingClientRect();
-        const shouldShow = mainPlayerRect.bottom < 0;
-        miniPlayerContainer.classList.toggle('visible', shouldShow);
-        miniPlayerContainer.classList.toggle('hidden', !shouldShow);
+        const mainPlayerRect = mainAudioContainer.getBoundingClientRect();
+        // Check if main player is scrolled out of view AND if screen is smaller than large (lg) breakpoint
+        const isSmallScreen = window.innerWidth < 1024; // Tailwind's 'lg' breakpoint is 1024px
+        const shouldShowMiniPlayer = mainPlayerRect.bottom < 0 && isSmallScreen;
+
+        miniPlayerContainer.classList.toggle('hidden', !shouldShowMiniPlayer);
+    });
+
+    // Initial check on load
+    const initialMainPlayerRect = mainAudioContainer.getBoundingClientRect();
+    const initialIsSmallScreen = window.innerWidth < 1024;
+    const initialShouldShowMiniPlayer = initialMainPlayerRect.bottom < 0 && initialIsSmallScreen;
+    miniPlayerContainer.classList.toggle('hidden', !initialShouldShowMiniPlayer);
+
+    // Handle window resize to adjust mini-player visibility
+    window.addEventListener('resize', function() {
+        const mainPlayerRect = mainAudioContainer.getBoundingClientRect();
+        const isSmallScreen = window.innerWidth < 1024;
+        const shouldShowMiniPlayer = mainPlayerRect.bottom < 0 && isSmallScreen;
+        miniPlayerContainer.classList.toggle('hidden', !shouldShowMiniPlayer);
     });
 });
 </script>
