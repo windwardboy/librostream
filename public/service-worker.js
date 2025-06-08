@@ -1,12 +1,5 @@
-const CACHE_NAME = 'librostream-cache-v1';
-const urlsToCache = [
-    '/',
-    '/css/app.css',
-    '/js/app.js',
-    // Add other essential assets here, e.g., offline page, core images
-    // '/offline.html',
-    // '/images/logo.png'
-];
+const CACHE_NAME = 'librostream-cache-v2'; // Increment cache version to force update
+const ASSETS_MANIFEST_URL = '/build/manifest.json';
 
 // Install event: caches the essential assets
 self.addEventListener('install', (event) => {
@@ -14,7 +7,28 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE_NAME)
             .then((cache) => {
                 console.log('Opened cache');
-                return cache.addAll(urlsToCache);
+                return fetch(ASSETS_MANIFEST_URL)
+                    .then(response => response.json())
+                    .then(manifest => {
+                        const urlsToCache = [
+                            '/',
+                            // Add other essential static assets here if not in manifest
+                            // '/offline.html',
+                            // '/images/logo.png',
+                        ];
+
+                        // Add hashed CSS and JS paths from manifest
+                        for (const key in manifest) {
+                            if (manifest[key].file) {
+                                urlsToCache.push('/build/' + manifest[key].file);
+                            }
+                        }
+                        console.log('Caching URLs:', urlsToCache);
+                        return cache.addAll(urlsToCache);
+                    });
+            })
+            .catch(error => {
+                console.error('Service Worker installation failed:', error);
             })
     );
 });
@@ -43,6 +57,7 @@ self.addEventListener('activate', (event) => {
                 cacheNames.map((cacheName) => {
                     if (cacheWhitelist.indexOf(cacheName) === -1) {
                         // Delete old caches
+                        console.log('Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
