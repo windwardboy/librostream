@@ -110,7 +110,7 @@
         </div>
 
         {{-- Pagination Links --}}
-        <div class="mt-12">
+        <div class="mt-12 pt-8">
             {{ $audiobooks->links() }}
         </div>
     @else
