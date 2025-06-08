@@ -7,7 +7,11 @@ module.exports = {
     "./resources/**/*.vue",
   ],
   theme: {
-    extend: {},
+    extend: {
+      zIndex: {
+        '60': '60', // For mini-player
+      }
+    },
   },
   plugins: [],
 }

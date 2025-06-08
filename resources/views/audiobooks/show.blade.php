@@ -207,9 +207,12 @@
         </div>
     </div>
 
-    <audio controls class="w-full mb-6" id="main-audio-player">
-        Your browser does not support the audio element.
-    </audio>
+    <!-- Replace your current audio player with this -->
+    <div id="main-audio-container" class="my-6 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg sticky top-4 z-10">
+        <audio controls class="w-full" id="main-audio-player">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
 
     <div id="ad-container-show-1" class="my-8 text-center">
         <div class="bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 p-4 rounded-md">
@@ -247,3 +250,41 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Clone the main player
+    const mainPlayer = document.getElementById('main-audio-player');
+    const miniPlayer = mainPlayer.cloneNode(true);
+    miniPlayer.id = 'mini-audio-player';
+    
+    // Create mini-player container
+    const miniPlayerContainer = document.createElement('div');
+    miniPlayerContainer.id = 'mini-player';
+    miniPlayerContainer.className = 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg border-t border-gray-200 dark:border-gray-700 p-2 hidden md:hidden';
+    miniPlayerContainer.appendChild(miniPlayer);
+    document.body.appendChild(miniPlayerContainer);
+    
+    // Sync players
+    mainPlayer.addEventListener('play', () => {
+        miniPlayer.currentTime = mainPlayer.currentTime;
+        miniPlayer.play();
+    });
+    mainPlayer.addEventListener('pause', () => miniPlayer.pause());
+    miniPlayer.addEventListener('play', () => {
+        mainPlayer.currentTime = miniPlayer.currentTime;
+        miniPlayer.play();
+    });
+    miniPlayer.addEventListener('pause', () => mainPlayer.pause());
+    
+    // Show/hide based on scroll
+    window.addEventListener('scroll', function() {
+        const mainPlayerRect = document.getElementById('main-audio-container').getBoundingClientRect();
+        const shouldShow = mainPlayerRect.bottom < 0;
+        miniPlayerContainer.classList.toggle('visible', shouldShow);
+        miniPlayerContainer.classList.toggle('hidden', !shouldShow);
+    });
+});
+</script>
+@endpush

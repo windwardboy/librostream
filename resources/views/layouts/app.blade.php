@@ -53,6 +53,22 @@
 
     {{-- Additional head content can be yielded here --}}
     @stack('head')
+<style>
+    /* Mini-player styles */
+    #mini-player {
+        transition: transform 0.3s ease;
+        transform: translateY(100%);
+    }
+    #mini-player.visible {
+        transform: translateY(0);
+    }
+    /* Prevent content hiding behind player */
+    @media (max-width: 767px) {
+        body {
+            padding-bottom: 80px;
+        }
+    }
+</style>
 </head>
 <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900 flex flex-col min-h-screen">
     <x-header />
