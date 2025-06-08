@@ -125,12 +125,55 @@
 
             <p class="text-md text-gray-700 dark:text-gray-300 mb-4"><strong>Duration:</strong> <span itemprop="duration">{{ $audiobook->duration ?? 'N/A' }}</span></p>
 
-            {{-- Templated "Why we love this" box --}}
-            <div class="bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500 dark:border-blue-700 text-blue-700 dark:text-blue-300 p-4 mb-6" role="alert">
-                <p class="font-bold">Why We Love This Audiobook</p>
-                <p class="text-sm">
-                    At Librostream, we're passionate about bringing you timeless stories like "{{ $audiobook->title }}". Freely available and beautifully narrated, it's a perfect example of the literary treasures waiting to be discovered in the public domain.
-                </p>
+            {{-- The Librostream Experience --}}
+            <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 my-8">
+                <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">The Librostream Experience</h3>
+                <ul class="space-y-4">
+                    <li class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-lg font-medium text-gray-900 dark:text-white">Modern Audio Player</p>
+                            <p class="text-gray-600 dark:text-gray-400">Enjoy a clean, fast, and easy-to-use player designed for seamless listening.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-lg font-medium text-gray-900 dark:text-white">Seamless Progress Tracking</p>
+                            <p class="text-gray-600 dark:text-gray-400">Pick up right where you left off, on any device.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-lg font-medium text-gray-900 dark:text-white">Expertly Curated Library</p>
+                            <p class="text-gray-600 dark:text-gray-400">Discover timeless classics and hidden gems, all in the public domain.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-lg font-medium text-gray-900 dark:text-white">Always 100% Free</p>
+                            <p class="text-gray-600 dark:text-gray-400">No fees, no sign-ups, ever. Just free audiobooks.</p>
+                        </div>
+                    </li>
+                </ul>
             </div>
 
 
