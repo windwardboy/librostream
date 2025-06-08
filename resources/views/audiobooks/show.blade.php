@@ -1,7 +1,9 @@
 @extends('layouts.app')
 
 @section('title', $audiobook->title . ' by ' . $audiobook->author)
-@section('meta_description', Str::limit($audiobook->description, 160))
+@section('meta_description', Str::limit(strip_tags($audiobook->description), 160))
+@section('og_type', 'video.other')
+@section('og_image', $audiobook->cover_image ?? asset('images/og-image.png'))
 
 @push('head')
 {{-- Audiobook Schema Markup --}}

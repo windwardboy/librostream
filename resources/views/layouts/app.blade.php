@@ -5,8 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}"> {{-- Good practice for forms --}}
 
-    <title>@yield('title') - {{ config('app.name', 'Librostream') }}</title>
-    <meta name="description" content="@yield('meta_description', config('app.name', 'Librostream') . ' is a free platform for streaming LibriVox audiobooks.')">
+    <title>@yield('title', 'Free Audiobooks') - {{ config('app.name', 'Librostream') }}</title>
+    <meta name="description" content="@yield('meta_description', 'Stream thousands of free, public domain audiobooks from the LibriVox collection. Enjoy a modern, user-friendly player and curated collections.')">
+
+    {{-- Open Graph / Facebook --}}
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="@yield('title', 'Free Audiobooks') - {{ config('app.name', 'Librostream') }}">
+    <meta property="og:description" content="@yield('meta_description', 'Stream thousands of free, public domain audiobooks from the LibriVox collection.')">
+    <meta property="og:image" content="@yield('og_image', asset('images/og-image.png'))"> {{-- Default OG image --}}
+
+    {{-- Twitter --}}
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ url()->current() }}">
+    <meta property="twitter:title" content="@yield('title', 'Free Audiobooks') - {{ config('app.name', 'Librostream') }}">
+    <meta property="twitter:description" content="@yield('meta_description', 'Stream thousands of free, public domain audiobooks from the LibriVox collection.')">
+    <meta property="twitter:image" content="@yield('og_image', asset('images/og-image.png'))"> {{-- Use same image as OG --}}
 
     {{-- Favicons --}}
     <link rel="icon" href="{{ asset('favicon-32x32.png') }}" sizes="32x32" type="image/png">
@@ -52,21 +66,6 @@
     {{-- Additional scripts can be yielded here --}}
     @stack('scripts')
 
-    {{-- Register Service Worker --}}
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker registered:', registration);
-                    })
-                    .catch(error => {
-                        console.error('Service Worker registration failed:', error);
-                    });
-            });
-        }
-    </script>
-
     {{-- Custom Cookie Consent Banner --}}
     <div id="cookie-consent-banner" class="fixed bottom-0 right-0 z-50 w-full md:max-w-sm bg-gray-800 text-white p-4 shadow-lg transform translate-y-full transition-transform duration-300 ease-in-out">
         <div class="container mx-auto flex items-center justify-between">
@@ -78,52 +77,5 @@
             </button>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const cookieBanner = document.getElementById('cookie-consent-banner');
-            const acceptButton = document.getElementById('accept-cookies');
-            const consentCookieName = 'cookie_consent';
-
-            // Function to set a cookie
-            function setCookie(name, value, days) {
-                let expires = "";
-                if (days) {
-                    const date = new Date();
-                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                    expires = "; expires=" + date.toUTCString();
-                }
-                document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-            }
-
-            // Function to get a cookie
-            function getCookie(name) {
-                const nameEQ = name + "=";
-                const ca = document.cookie.split(';');
-                for(let i = 0; i < ca.length; i++) {
-                    let c = ca[i];
-                    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-                }
-                return null;
-            }
-
-            // Check if consent cookie exists
-            if (!getCookie(consentCookieName)) {
-                // If not, show the banner after a short delay (for the transition)
-                setTimeout(() => {
-                    cookieBanner.classList.remove('translate-y-full');
-                }, 100); // Adjust delay as needed
-            }
-
-            // Add event listener to the accept button
-            acceptButton.addEventListener('click', function() {
-                setCookie(consentCookieName, 'true', 365); // Set cookie for 365 days
-                cookieBanner.classList.add('translate-y-full'); // Hide the banner
-                // Note: For full GDPR compliance with non-essential cookies (like GA),
-                // you would add logic here to load those scripts after consent.
-            });
-        });
-    </script>
 </body>
 </html>

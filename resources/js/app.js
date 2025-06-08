@@ -318,7 +318,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (mobileMenuButton && mobileMenu) {
         mobileMenuButton.addEventListener('click', () => {
+            const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
             mobileMenu.classList.toggle('hidden');
+            mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
         });
     }
 });
@@ -361,3 +363,62 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- End Dark Mode Toggle ---
+
+// --- Service Worker Registration ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+                console.log('Service Worker registered:', registration);
+            })
+            .catch(error => {
+                console.error('Service Worker registration failed:', error);
+            });
+    });
+}
+// --- End Service Worker Registration ---
+
+// --- Cookie Consent Banner ---
+document.addEventListener('DOMContentLoaded', function() {
+    const cookieBanner = document.getElementById('cookie-consent-banner');
+    const acceptButton = document.getElementById('accept-cookies');
+    const consentCookieName = 'cookie_consent';
+
+    // Function to set a cookie
+    function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "") + expires + "; path=/";
+    }
+
+    // Function to get a cookie
+    function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for(let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
+    // Check if consent cookie exists
+    if (!getCookie(consentCookieName)) {
+        // If not, show the banner after a short delay (for the transition)
+        setTimeout(() => {
+            cookieBanner.classList.remove('translate-y-full');
+        }, 100); // Adjust delay as needed
+    }
+
+    // Add event listener to the accept button
+    acceptButton.addEventListener('click', function() {
+        setCookie(consentCookieName, 'true', 365); // Set cookie for 365 days
+        cookieBanner.classList.add('translate-y-full'); // Hide the banner
+    });
+});
+// --- End Cookie Consent Banner ---
