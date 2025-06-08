@@ -3,26 +3,33 @@
 @section('title', 'All Audiobooks')
 
 @section('content')
-    {{-- Hero Section --}}
-    <section class="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 text-white py-20 mb-12 rounded-lg shadow-xl">
-        <div class="container mx-auto px-6 text-center">
-            <h2 class="text-5xl font-extrabold mb-4 leading-tight">Stream Free Public Domain Audiobooks</h2>
-            <p class="text-xl text-blue-100 dark:text-blue-200 mb-8">
-                Explore a vast collection of audiobooks from LibriVox, all in the public domain and 100% free to stream.
-            </p>
-            {{-- Optional: Call to action button --}}
-            {{-- <a href="#audiobook-grid" class="bg-white text-indigo-600 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition duration-300">Browse Collection</a> --}}
-        </div>
-    </section>
+    <div class="relative">
+        {{-- Hero Section --}}
+        <section class="animated-gradient text-white py-24 sm:py-32 rounded-lg shadow-xl relative overflow-hidden">
+            <div class="container mx-auto px-6 text-center relative z-10">
+                <h2 class="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 leading-tight tracking-tight">
+                    Stream Free Public Domain Audiobooks
+                </h2>
+                <p class="text-lg sm:text-xl text-blue-100 dark:text-blue-200 mb-8 max-w-3xl mx-auto">
+                    Explore a vast collection of audiobooks from LibriVox, all in the public domain and 100% free to stream.
+                </p>
+                <a href="#audiobook-grid" class="bg-white text-indigo-600 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition duration-300 shadow-lg transform hover:scale-105">
+                    Browse Collection
+                </a>
+            </div>
+        </section>
 
-    {{-- Features Widget --}}
-    @if(isset($totalAudiobooks, $uniqueLanguages, $uniqueReaders))
-        <x-features-widget
-            :totalAudiobooks="$totalAudiobooks"
-            :uniqueLanguages="$uniqueLanguages"
-            :uniqueReaders="$uniqueReaders"
-        />
-    @endif
+        {{-- Features Widget (Overlapping) --}}
+        <div class="relative px-4 sm:px-6 lg:px-8 -mt-16 z-20">
+            @if(isset($totalAudiobooks, $uniqueLanguages, $uniqueReaders))
+                <x-features-widget
+                    :totalAudiobooks="$totalAudiobooks"
+                    :uniqueLanguages="$uniqueLanguages"
+                    :uniqueReaders="$uniqueReaders"
+                />
+            @endif
+        </div>
+    </div>
 
     {{-- Continue Listening Section (Populated by JS) --}}
     <section id="continue-listening-section" class="mb-12 hidden"> {{-- Hidden by default, shown by JS if items exist --}}
