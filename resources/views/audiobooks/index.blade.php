@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'All Audiobooks')
+@section('title', 'Stream Classic Audiobooks for Free')
 
 @section('content')
     <div class="relative">
