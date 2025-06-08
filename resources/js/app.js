@@ -381,26 +381,28 @@ if ('serviceWorker' in navigator) {
 // --- Animated Counter for Features Widget ---
 document.addEventListener('DOMContentLoaded', () => {
     const counters = document.querySelectorAll('.feature-count');
-    const speed = 200; // The lower the number, the faster the count
 
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const counter = entry.target;
-                const updateCount = () => {
-                    const target = +counter.getAttribute('data-count');
-                    const count = +counter.innerText;
+                const target = +counter.getAttribute('data-count');
+                counter.innerText = '0';
 
-                    const inc = target / speed;
-
-                    if (count < target) {
-                        counter.innerText = Math.ceil(count + inc);
-                        setTimeout(updateCount, 1);
+                let start = 0;
+                const duration = 1500; // Animation duration in ms
+                const step = timestamp => {
+                    if (!start) start = timestamp;
+                    const progress = timestamp - start;
+                    const current = Math.min(Math.floor(progress / duration * target), target);
+                    counter.innerText = current.toLocaleString();
+                    if (progress < duration) {
+                        window.requestAnimationFrame(step);
                     } else {
-                        counter.innerText = target.toLocaleString(); // Add commas to final number
+                        counter.innerText = target.toLocaleString();
                     }
                 };
-                updateCount();
+                window.requestAnimationFrame(step);
                 observer.unobserve(counter); // Stop observing after animation
             }
         });
