@@ -75,53 +75,18 @@
         <a href="{{ route('audiobooks.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">&laquo; Back to All Audiobooks</a>
     </div>
 
-    <div class="lg:grid lg:grid-cols-3 lg:gap-12">
-        {{-- Left Column (Sticky Player & Chapters) --}}
-        <div class="lg:col-span-1 lg:sticky lg:top-8 self-start">
+    <div class="md:flex md:space-x-8 mb-8">
+        <div class="md:w-1/3 mb-6 md:mb-0">
             @if($audiobook->cover_image)
-                <img src="{{ $audiobook->cover_image }}" alt="Cover image for {{ $audiobook->title }}" class="w-full h-auto object-cover rounded-lg shadow-md mb-6" itemprop="image">
+                <img src="{{ $audiobook->cover_image }}" alt="Cover image for {{ $audiobook->title }}" class="w-full h-auto object-cover rounded-lg shadow-md" itemprop="image">
             @else
-                <div class="w-full h-96 bg-gray-300 dark:bg-gray-700 flex items-center justify-center rounded-lg shadow-md mb-6">
+                <div class="w-full h-96 bg-gray-300 dark:bg-gray-700 flex items-center justify-center rounded-lg shadow-md">
                     <span class="text-gray-500 dark:text-gray-400">No Image Available</span>
                 </div>
             @endif
-
-            <audio controls class="w-full mb-6" id="main-audio-player">
-                Your browser does not support the audio element.
-            </audio>
-
-            <div class="mt-6 w-full">
-                <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Audio Sections:</h3>
-                @if($audiobook->sections->count() > 0)
-                    <ul class="space-y-2 max-h-96 overflow-y-auto">
-                        @foreach($audiobook->sections as $section)
-                            <li class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg shadow-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition"
-                                data-section-id="{{ $section->id }}"
-                                data-src="{{ $section->source_url }}"
-                                data-title="{{ $section->title }}">
-                                <h4 class="text-lg font-medium text-gray-800 dark:text-white">
-                                    Section {{ $section->section_number }}: {{ $section->title }}
-                                    @if($section->duration)
-                                        <span class="text-sm text-gray-600 dark:text-gray-400 ml-2">({{ $section->duration }})</span>
-                                    @endif
-                                </h4>
-                                @if($section->reader_name)
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Read by: {{ $section->reader_name }}</p>
-                                @endif
-                                @if(!$section->source_url)
-                                    <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Audio source not available for this section.</p>
-                                @endif
-                            </li>
-                        @endforeach
-                    </ul>
-                @else
-                    <p class="text-gray-600 dark:text-gray-400">No audio sections found for this audiobook.</p>
-                @endif
-            </div>
         </div>
 
-        {{-- Right Column (Scrollable Content) --}}
-        <div class="lg:col-span-2 mt-8 lg:mt-0">
+        <div class="md:w-2/3">
             <h1 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-white mb-2" itemprop="name">{{ $audiobook->title }}</h1>
 
             <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
@@ -242,10 +207,43 @@
         </div>
     </div>
 
+    <audio controls class="w-full mb-6" id="main-audio-player">
+        Your browser does not support the audio element.
+    </audio>
+
     <div id="ad-container-show-1" class="my-8 text-center">
         <div class="bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 p-4 rounded-md">
             Advertisement Placeholder
         </div>
+    </div>
+
+    <div class="mt-6 w-full">
+        <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Audio Sections:</h3>
+        @if($audiobook->sections->count() > 0)
+            <ul class="space-y-2">
+                @foreach($audiobook->sections as $section)
+                    <li class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg shadow-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                        data-section-id="{{ $section->id }}"
+                        data-src="{{ $section->source_url }}"
+                        data-title="{{ $section->title }}">
+                        <h4 class="text-lg font-medium text-gray-800 dark:text-white">
+                            Section {{ $section->section_number }}: {{ $section->title }}
+                            @if($section->duration)
+                                <span class="text-sm text-gray-600 dark:text-gray-400 ml-2">({{ $section->duration }})</span>
+                            @endif
+                        </h4>
+                        @if($section->reader_name)
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Read by: {{ $section->reader_name }}</p>
+                        @endif
+                        @if(!$section->source_url)
+                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Audio source not available for this section.</p>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        @else
+            <p class="text-gray-600 dark:text-gray-400">No audio sections found for this audiobook.</p>
+        @endif
     </div>
 </div>
 @endsection
