@@ -206,7 +206,7 @@
 
             @if($audiobook->librivox_url)
             <div class="mt-4 w-full">
-                <a href="{{ route('audiobooks.librivox_url') }}" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-600 dark:text-blue-400 hover:underline" itemprop="url">
+                <a href="{{ $audiobook->librivox_url }}" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-600 dark:text-blue-400 hover:underline" itemprop="url">
                     View on LibriVox.org &rarr;
                 </a>
             </div>
