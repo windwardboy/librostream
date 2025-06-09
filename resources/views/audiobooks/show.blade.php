@@ -75,13 +75,6 @@
         <a href="{{ route('audiobooks.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">&laquo; Back to All Audiobooks</a>
     </div>
 
-    <!-- Main Audio Player Container -->
-    <div id="main-audio-container" class="my-6 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg sticky top-4 z-10">
-        <audio controls class="w-full" id="main-audio-player">
-            Your browser does not support the audio element.
-        </audio>
-    </div>
-
     <div class="md:flex md:space-x-8 mb-8">
         <div class="md:w-1/3 mb-6 md:mb-0">
             @if($audiobook->cover_image)
@@ -176,6 +169,13 @@
             @endif
 
             <p class="text-md text-gray-700 dark:text-gray-300 mb-4"><strong>Duration:</strong> <span itemprop="duration">{{ $audiobook->duration ?? 'N/A' }}</span></p>
+
+            <!-- Main Audio Player Container - Moved Here -->
+            <div id="main-audio-container" class="my-6 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg sticky top-4 z-10">
+                <audio controls class="w-full" id="main-audio-player">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
 
             {{-- Templated "Why we love this" box - Moved Here --}}
             <div class="bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500 dark:border-blue-700 text-blue-700 dark:text-blue-300 p-4 mb-6" role="alert">
@@ -309,3 +309,5 @@
 @push('scripts')
 {{-- Removed mini-player JavaScript as per user request --}}
 @endpush
+</content>
+</write_to_file>
