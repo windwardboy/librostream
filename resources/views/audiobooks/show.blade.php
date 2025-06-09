@@ -75,13 +75,6 @@
         <a href="{{ route('audiobooks.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">&laquo; Back to All Audiobooks</a>
     </div>
 
-    <!-- Main Audio Player Container - Moved Here -->
-    <div id="main-audio-container" class="my-6 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg sticky top-4 z-10">
-        <audio controls class="w-full" id="main-audio-player">
-            Your browser does not support the audio element.
-        </audio>
-    </div>
-
     <div class="md:flex md:space-x-8 mb-8">
         <div class="md:w-1/3 mb-6 md:mb-0">
             @if($audiobook->cover_image)
@@ -175,6 +168,13 @@
 
             <p class="text-md text-gray-700 dark:text-gray-300 mb-4"><strong>Duration:</strong> <span itemprop="duration">{{ $audiobook->duration ?? 'N/A' }}</span></p>
 
+            <!-- Main Audio Player Container - Moved Here -->
+            <div id="main-audio-container" class="my-6 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg sticky top-4 z-10">
+                <audio controls class="w-full" id="main-audio-player">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+
             {{-- Templated "Why we love this" box - Moved Here --}}
             <div class="bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500 dark:border-blue-700 text-blue-700 dark:text-blue-300 p-4 mb-6" role="alert">
                 <p class="font-bold">Why We Love This Audiobook</p>
@@ -206,7 +206,7 @@
 
             @if($audiobook->librivox_url)
             <div class="mt-4 w-full">
-                <a href="{{ $audiobook->librivox_url }}" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-600 dark:text-blue-400 hover:underline" itemprop="url">
+                <a href="{{ route('audiobooks.librivox_url') }}" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-600 dark:text-blue-400 hover:underline" itemprop="url">
                     View on LibriVox.org &rarr;
                 </a>
             </div>
