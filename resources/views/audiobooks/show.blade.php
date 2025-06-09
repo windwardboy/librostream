@@ -75,6 +75,13 @@
         <a href="{{ route('audiobooks.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">&laquo; Back to All Audiobooks</a>
     </div>
 
+    <!-- Main Audio Player Container - Moved Here -->
+    <div id="main-audio-container" class="my-6 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg sticky top-4 z-10">
+        <audio controls class="w-full" id="main-audio-player">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
     <div class="md:flex md:space-x-8 mb-8">
         <div class="md:w-1/3 mb-6 md:mb-0">
             @if($audiobook->cover_image)
@@ -84,60 +91,8 @@
                     <span class="text-gray-500 dark:text-gray-400">No Image Available</span>
                 </div>
             @endif
-        </div>
 
-        <div class="md:w-2/3">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-white mb-2" itemprop="name">{{ $audiobook->title }}</h1>
-
-            <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
-                Dive into "{{ $audiobook->title }}", a classic
-                @if($audiobook->category)
-                    <span class="font-semibold">{{ $audiobook->category->name }}</span>
-                @else
-                    audiobook
-                @endif
-                by <span class="font-semibold">{{ $audiobook->author }}</span>
-                @if($audiobook->narrator)
-                    narrated by <span class="font-semibold">{{ $audiobook->narrator }}</span>
-                @endif
-                .
-            </p>
-
-            <p class="text-lg text-gray-600 dark:text-gray-400 mb-1">By: <span class="font-semibold" itemprop="author" itemscope itemtype="https://schema.org/Person"><span itemprop="name">{{ $audiobook->author }}</span></span></p>
-            @if($audiobook->narrator)
-            <p class="text-lg text-gray-600 dark:text-gray-400 mb-4">Narrated by: <span class="font-semibold" itemprop="narrator" itemscope itemtype="https://schema.org/Person"><span itemprop="name">{{ $audiobook->narrator }}</span></span></p>
-            @endif
-
-            @if($audiobook->category)
-                <p class="text-md text-gray-700 dark:text-gray-300 mb-4">
-                    Genre:
-                    <span class="text-sm bg-indigo-100 dark:bg-indigo-700 text-indigo-700 dark:text-indigo-200 px-3 py-1 rounded-full" itemprop="genre">{{ $audiobook->category->name }}</span>
-                </p>
-            @endif
-
-            <p class="text-md text-gray-700 dark:text-gray-300 mb-4"><strong>Duration:</strong> <span itemprop="duration">{{ $audiobook->duration ?? 'N/A' }}</span></p>
-
-            <!-- Main Audio Player Container - Moved Here -->
-            <div id="main-audio-container" class="my-6 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg sticky top-4 z-10">
-                <audio controls class="w-full" id="main-audio-player">
-                    Your browser does not support the audio element.
-                </audio>
-            </div>
-
-            <div class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mb-6 w-full" itemprop="description">
-                <h3 class="text-xl font-semibold mb-2">Description:</h3>
-                {!! nl2br(e($audiobook->description)) !!}
-            </div>
-
-            {{-- Templated "Why we love this" box --}}
-            <div class="bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500 dark:border-blue-700 text-blue-700 dark:text-blue-300 p-4 mb-6" role="alert">
-                <p class="font-bold">Why We Love This Audiobook</p>
-                <p class="text-sm">
-                    At Librostream, we're passionate about bringing you timeless stories like "{{ $audiobook->title }}". Freely available and beautifully narrated, it's a perfect example of the literary treasures waiting to be discovered in the public domain.
-                </p>
-            </div>
-
-            {{-- The Librostream Experience --}}
+            {{-- The Librostream Experience - Moved Here --}}
             <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 my-8">
                 <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">The Librostream Experience</h3>
                 <ul class="space-y-4">
@@ -186,6 +141,51 @@
                         </div>
                     </li>
                 </ul>
+            </div>
+        </div>
+
+        <div class="md:w-2/3">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-white mb-2" itemprop="name">{{ $audiobook->title }}</h1>
+
+            <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
+                Dive into "{{ $audiobook->title }}", a classic
+                @if($audiobook->category)
+                    <span class="font-semibold">{{ $audiobook->category->name }}</span>
+                @else
+                    audiobook
+                @endif
+                by <span class="font-semibold">{{ $audiobook->author }}</span>
+                @if($audiobook->narrator)
+                    narrated by <span class="font-semibold">{{ $audiobook->narrator }}</span>
+                @endif
+                .
+            </p>
+
+            <p class="text-lg text-gray-600 dark:text-gray-400 mb-1">By: <span class="font-semibold" itemprop="author" itemscope itemtype="https://schema.org/Person"><span itemprop="name">{{ $audiobook->author }}</span></span></p>
+            @if($audiobook->narrator)
+            <p class="text-lg text-gray-600 dark:text-gray-400 mb-4">Narrated by: <span class="font-semibold" itemprop="narrator" itemscope itemtype="https://schema.org/Person"><span itemprop="name">{{ $audiobook->narrator }}</span></span></p>
+            @endif
+
+            @if($audiobook->category)
+                <p class="text-md text-gray-700 dark:text-gray-300 mb-4">
+                    Genre:
+                    <span class="text-sm bg-indigo-100 dark:bg-indigo-700 text-indigo-700 dark:text-indigo-200 px-3 py-1 rounded-full" itemprop="genre">{{ $audiobook->category->name }}</span>
+                </p>
+            @endif
+
+            <p class="text-md text-gray-700 dark:text-gray-300 mb-4"><strong>Duration:</strong> <span itemprop="duration">{{ $audiobook->duration ?? 'N/A' }}</span></p>
+
+            {{-- Templated "Why we love this" box - Moved Here --}}
+            <div class="bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500 dark:border-blue-700 text-blue-700 dark:text-blue-300 p-4 mb-6" role="alert">
+                <p class="font-bold">Why We Love This Audiobook</p>
+                <p class="text-sm">
+                    At Librostream, we're passionate about bringing you timeless stories like "{{ $audiobook->title }}". Freely available and beautifully narrated, it's a perfect example of the literary treasures waiting to be discovered in the public domain.
+                </p>
+            </div>
+
+            <div class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mb-6 w-full" itemprop="description">
+                <h3 class="text-xl font-semibold mb-2">Description:</h3>
+                {!! nl2br(e($audiobook->description)) !!}
             </div>
 
             {{-- Tags Section --}}
