@@ -31,7 +31,7 @@ class LibriVoxService
         $queryParams = array_merge($defaultParams, $params);
 
         try {
-            $response = Http::timeout(30)->get($this->baseUrl, $queryParams);
+            $response = Http::timeout(60)->get($this->baseUrl, $queryParams);
 
             if ($response->successful()) {
                 $data = $response->json();
