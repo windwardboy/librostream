@@ -35,29 +35,44 @@ class LibriVoxService
 
             if ($response->successful()) {
                 $data = $response->json();
+                // Log successful response data for debugging
+                Log::info('LibriVox API successful response.', [
+                    'status' => $response->status(),
+                    'data_keys' => array_keys($data),
+                    'books_count' => count($data['books'] ?? []),
+                    'url' => $this->baseUrl,
+                    'params' => $queryParams
+                ]);
                 // The audiobooks are usually under a 'books' key
                 return $data['books'] ?? [];
             } else {
+                // Log failed response details for debugging
                 Log::error('LibriVox API request failed.', [
                     'status' => $response->status(),
-                    'response' => $response->body(),
+                    'response_body' => $response->body(), // Log the full response body
                     'url' => $this->baseUrl,
                     'params' => $queryParams
                 ]);
                 return [];
             }
         } catch (\Illuminate\Http\Client\RequestException $e) {
+            // Log request exception details for debugging
             Log::error('LibriVox API request exception: ' . $e->getMessage(), [
                 'url' => $this->baseUrl,
                 'params' => $queryParams,
-                'exception' => $e
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_trace' => $e->getTraceAsString() // Log stack trace for detailed error
             ]);
             return [];
         } catch (\Exception $e) {
+            // Log any other unexpected errors for debugging
             Log::error('An unexpected error occurred while fetching from LibriVox API: ' . $e->getMessage(), [
                 'url' => $this->baseUrl,
                 'params' => $queryParams,
-                'exception' => $e
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_trace' => $e->getTraceAsString() // Log stack trace for detailed error
             ]);
             return [];
         }
