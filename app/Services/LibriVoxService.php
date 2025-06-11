@@ -7,27 +7,29 @@ use Illuminate\Support\Facades\Log;
 
 class LibriVoxService
 {
-    protected string $baseUrl = 'https://librivox.org/api/feed/audiobooks/';
+    // Change base URL to Archive.org's advanced search API
+    protected string $baseUrl = 'https://archive.org/advancedsearch.php';
 
     /**
-     * Fetches audiobooks from the LibriVox API.
+     * Fetches audiobooks from the Archive.org Search API.
      *
      * @param int $limit The number of records to fetch.
      * @param int $offset The offset for pagination.
-     * @param array $params Additional parameters for the API query (e.g., author, title, since).
+     * @param array $params Additional parameters for the API query.
      * @return array An array of audiobook data, or an empty array on failure.
      */
     public function fetchAudiobooks(int $limit = 5, int $offset = 0, array $params = []): array
     {
         $defaultParams = [
-            'format' => 'json',
-            'extended' => '1', // To get more details including sections
-            'limit' => $limit,
-            'offset' => $offset,
+            // Query for LibriVox audiobooks
+            'q' => 'collection:librivox AND mediatype:audio',
+            'fl' => 'identifier,title,creator,description,publicdate,subject,runtime,avg_rating,num_reviews,language,image,url,format', // Fields to return as a comma-separated string
+            'rows' => $limit, // Archive.org uses 'rows' instead of 'limit'
+            'start' => $offset, // Archive.org uses 'start' instead of 'offset'
+            'output' => 'json', // Request JSON output
         ];
 
         // Merge default params with any custom params provided
-        // Custom params will overwrite defaults if keys are the same
         $queryParams = array_merge($defaultParams, $params);
 
         try {
@@ -35,44 +37,42 @@ class LibriVoxService
 
             if ($response->successful()) {
                 $data = $response->json();
-                // Log successful response data for debugging
-                Log::info('LibriVox API successful response.', [
+                // Archive.org search results are typically under 'response' -> 'docs'
+                $audiobooks = $data['response']['docs'] ?? [];
+
+                Log::info('Archive.org API successful response.', [
                     'status' => $response->status(),
-                    'data_keys' => array_keys($data),
-                    'books_count' => count($data['books'] ?? []),
+                    'results_count' => count($audiobooks),
                     'url' => $this->baseUrl,
                     'params' => $queryParams
                 ]);
-                // The audiobooks are usually under a 'books' key
-                return $data['books'] ?? [];
+
+                return $audiobooks;
             } else {
-                // Log failed response details for debugging
-                Log::error('LibriVox API request failed.', [
+                Log::error('Archive.org API request failed.', [
                     'status' => $response->status(),
-                    'response_body' => $response->body(), // Log the full response body
+                    'response_body' => $response->body(),
                     'url' => $this->baseUrl,
                     'params' => $queryParams
                 ]);
                 return [];
             }
         } catch (\Illuminate\Http\Client\RequestException $e) {
-            // Log request exception details for debugging
-            Log::error('LibriVox API request exception: ' . $e->getMessage(), [
+            Log::error('Archive.org API request exception: ' . $e->getMessage(), [
                 'url' => $this->baseUrl,
                 'params' => $queryParams,
                 'exception_class' => get_class($e),
                 'exception_message' => $e->getMessage(),
-                'exception_trace' => $e->getTraceAsString() // Log stack trace for detailed error
+                'exception_trace' => $e->getTraceAsString()
             ]);
             return [];
         } catch (\Exception $e) {
-            // Log any other unexpected errors for debugging
-            Log::error('An unexpected error occurred while fetching from LibriVox API: ' . $e->getMessage(), [
+            Log::error('An unexpected error occurred while fetching from Archive.org API: ' . $e->getMessage(), [
                 'url' => $this->baseUrl,
                 'params' => $queryParams,
                 'exception_class' => get_class($e),
                 'exception_message' => $e->getMessage(),
-                'exception_trace' => $e->getTraceAsString() // Log stack trace for detailed error
+                'exception_trace' => $e->getTraceAsString()
             ]);
             return [];
         }
