@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Audiobook;
 use App\Models\AudiobookSection; // Import the AudiobookSection model
 use App\Models\Category;
-use App\Services\LibriVoxService;
+use App\Services\LibriVoxService; // This service now fetches from Archive.org
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -24,7 +24,7 @@ class FetchLibriVoxAudiobooks extends Command
      *
      * @var string
      */
-    protected $description = 'Fetch audiobooks from the LibriVox API and store them in the database.';
+    protected $description = 'Fetch audiobooks from the Archive.org (LibriVox collection) API and store them in the database.';
 
     protected LibriVoxService $libriVoxService;
 
@@ -48,13 +48,17 @@ class FetchLibriVoxAudiobooks extends Command
     {
         $limit = (int) $this->option('limit');
         $offset = (int) $this->option('offset');
-        $since = $this->option('since');
+        $since = $this->option('since'); // 'since' parameter might need custom handling for Archive.org
 
-        $this->info("Fetching {$limit} audiobooks from LibriVox API (offset: {$offset}" . ($since ? ", since: {$since}" : "") . ")...");
+        $this->info("Fetching {$limit} audiobooks from Archive.org (LibriVox collection) API (offset: {$offset}" . ($since ? ", since: {$since}" : "") . ")...");
 
         $apiParams = [];
         if ($since) {
-            $apiParams['since'] = $since;
+            // Archive.org's 'publicdate' field can be used with a range query
+            // Example: 'publicdate:[2023-01-01 TO *]'
+            // This would require adjusting the 'q' parameter in LibriVoxService
+            // For simplicity, we'll pass it, but the service needs to interpret it.
+            $apiParams['publicdate'] = $since;
         }
 
         $apiAudiobooks = $this->libriVoxService->fetchAudiobooks(limit: $limit, offset: $offset, params: $apiParams);
@@ -72,18 +76,19 @@ class FetchLibriVoxAudiobooks extends Command
         $updatedCount = 0;
 
         foreach ($apiAudiobooks as $apiBook) {
-            if (empty($apiBook['id']) || empty($apiBook['title'])) {
-                $this->warn("Skipping an entry due to missing ID or title.");
+            // Archive.org uses 'identifier' as the unique ID
+            if (empty($apiBook['identifier']) || empty($apiBook['title'])) {
+                $this->warn("Skipping an entry due to missing identifier or title.");
                 $progressBar->advance();
                 continue;
             }
 
-            // Category
+            // Category (from 'subject' field)
             $categoryName = 'Uncategorized'; // Default category
-            if (!empty($apiBook['genres']) && !empty($apiBook['genres'][0]['name'])) {
-                $categoryName = trim($apiBook['genres'][0]['name']);
-            } else {
-                 $categoryName = 'Uncategorized'; // Default category
+            if (!empty($apiBook['subject'])) {
+                // Subjects can be semicolon-separated, take the first one or process as needed
+                $subjects = is_array($apiBook['subject']) ? $apiBook['subject'] : explode(';', $apiBook['subject']);
+                $categoryName = trim($subjects[0]);
             }
 
             // Generate slug for the category
@@ -101,41 +106,23 @@ class FetchLibriVoxAudiobooks extends Command
                 $this->info("Populated/Updated slug for category: {$category->name} (Slug: {$category->slug})");
             }
 
-
-            // Author
+            // Author (from 'creator' field)
             $authorName = 'Unknown Author';
-            if (!empty($apiBook['authors']) && !empty($apiBook['authors'][0]['last_name'])) {
-                $authorName = trim($apiBook['authors'][0]['first_name'] . ' ' . $apiBook['authors'][0]['last_name']);
+            if (!empty($apiBook['creator'])) {
+                // Creator can be a string or an array, take the first one or process as needed
+                $creators = is_array($apiBook['creator']) ? $apiBook['creator'] : explode(';', $apiBook['creator']);
+                $authorName = trim($creators[0]);
             }
 
-            // Narrator
-            $narratorName = 'Various Readers'; // Default
-            if (!empty($apiBook['sections']) && !empty($apiBook['sections'][0]['readers']) && !empty($apiBook['sections'][0]['readers'][0]['display_name'])) {
-                // Check if all readers are the same for all sections (simplistic check)
-                $firstReader = $apiBook['sections'][0]['readers'][0]['display_name'];
-                $allSameReader = true;
-                foreach ($apiBook['sections'] as $section) {
-                    if (empty($section['readers']) || $section['readers'][0]['display_name'] !== $firstReader) {
-                        $allSameReader = false;
-                        break;
-                    }
-                }
-                if ($allSameReader) {
-                    $narratorName = $firstReader;
-                }
-            }
+            // Narrator (Archive.org search API doesn't directly provide narrator, often part of creator/description)
+            // For now, default to 'Various Readers' or try to extract from description if possible
+            $narratorName = 'Various Readers';
+            // You might need more advanced logic here if narrator is consistently in 'creator' or 'description'
 
+            // Duration from 'runtime' (e.g., "01:23:45")
+            $durationStr = $apiBook['runtime'] ?? 'N/A';
 
-            // Duration from totaltimesecs
-            $durationStr = 'N/A';
-            if (isset($apiBook['totaltimesecs']) && is_numeric($apiBook['totaltimesecs'])) {
-                $durationStr = gmdate('H:i:s', (int)$apiBook['totaltimesecs']);
-            } elseif (!empty($apiBook['totaltime'])) {
-                 $durationStr = $apiBook['totaltime']; // Fallback to string if secs not available
-            }
-
-
-            // Description (strip HTML tags)
+            // Description (strip HTML tags if necessary, Archive.org descriptions are usually plain text)
             $description = !empty($apiBook['description']) ? strip_tags($apiBook['description']) : 'No description available.';
             $description = Str::limit($description, 1000); // Limit description length if necessary for DB
 
@@ -143,55 +130,15 @@ class FetchLibriVoxAudiobooks extends Command
             $audiobookData = [
                 'title' => trim($apiBook['title']),
                 'author' => $authorName,
-                'narrator' => $narratorName,
+                'narrator' => $narratorName, // Will be 'Various Readers' for now
                 'description' => $description,
-                'cover_image' => null, // Placeholder - implement strategy later
-                'duration' => $durationStr, // Total duration
-                'source_url' => null, // Main source_url is now null, sections have the actual files
+                'cover_image' => $apiBook['image'] ?? null, // 'image' field from Archive.org
+                'duration' => $durationStr,
+                'source_url' => null, // Main source_url is null, sections will have actual files
                 'category_id' => $category->id,
                 'language' => $apiBook['language'] ?? 'English',
-                'librivox_url' => $apiBook['url_librivox'] ?? null,
+                'librivox_url' => $apiBook['url'] ?? null, // 'url' field from Archive.org is the item page
             ];
-
-            // Attempt to fetch cover image from Archive.org via RSS feed URL
-            $coverImageUrl = null;
-            if (!empty($apiBook['url_rss'])) {
-                $this->info("Attempting to fetch cover image for '{$apiBook['title']}' from RSS URL: {$apiBook['url_rss']}");
-                try {
-                    $response = Http::timeout(60)->get($apiBook['url_rss']); // Increased timeout to 60 seconds
-
-                    if ($response->successful()) {
-                        $this->info("Successfully fetched RSS URL. Parsing HTML...");
-                        // Regex to find the image URL within the <itunes:image> tag
-                        if (preg_match('/<itunes:image[^>]+href="([^"]+)"/i', $response->body(), $matches)) {
-                            $coverImageUrl = $matches[1];
-                            $this->info("Found image URL in itunes:image tag: {$coverImageUrl}");
-                        } elseif (preg_match('/<img[^>]+src="([^"]+)"/i', $response->body(), $matches)) {
-                             // Fallback regex to find the first image src in the body if itunes:image is not found
-                            $coverImageUrl = $matches[1];
-                            if (!filter_var($coverImageUrl, FILTER_VALIDATE_URL)) {
-                                // Attempt to make it absolute if it looks like a relative path
-                                $baseUrl = parse_url($apiBook['url_rss'], PHP_URL_SCHEME) . '://' . parse_url($apiBook['url_rss'], PHP_URL_HOST);
-                                $coverImageUrl = rtrim($baseUrl, '/') . '/' . ltrim($coverImageUrl, '/');
-                                $this->info("Found relative image URL in img tag, converted to absolute: {$coverImageUrl}");
-                            } else {
-                                $this->info("Found absolute image URL in img tag: {$coverImageUrl}");
-                            }
-                        } else {
-                            $this->warn("No image URL found in itunes:image or img tags for book '{$apiBook['title']}' (ID: {$apiBook['id']}).");
-                        }
-                    } else {
-                        $this->warn("Failed to fetch RSS URL for book '{$apiBook['title']}' (ID: {$apiBook['id']}). Status: " . $response->status());
-                    }
-                } catch (\Exception $e) {
-                    $this->warn("Error fetching or parsing RSS URL for book '{$apiBook['title']}' (ID: {$apiBook['id']}): " . $e->getMessage());
-                }
-            } else {
-                $this->info("No RSS URL available for book '{$apiBook['title']}' (ID: {$apiBook['id']}). Skipping cover image fetch.");
-            }
-
-            // Update cover_image in the data array if found
-            $audiobookData['cover_image'] = $coverImageUrl;
 
             // Generate a unique slug for the audiobook
             $baseSlug = Str::slug($apiBook['title']);
@@ -199,19 +146,19 @@ class FetchLibriVoxAudiobooks extends Command
             $counter = 1;
 
             // Check for slug uniqueness and append counter if necessary
-            while (Audiobook::where('slug', $slug)->where('librivox_id', '!=', $apiBook['id'])->exists()) {
+            while (Audiobook::where('slug', $slug)->where('librivox_id', '!=', $apiBook['identifier'])->exists()) {
                 $slug = $baseSlug . '-' . $counter++;
             }
 
             $audiobookData['slug'] = $slug;
 
-            $this->info("Processing book: {$apiBook['title']} (ID: {$apiBook['id']}), Slug: {$slug}");
+            $this->info("Processing book: {$apiBook['title']} (Identifier: {$apiBook['identifier']}), Slug: {$slug}");
             $this->info("Data for updateOrCreate: " . json_encode($audiobookData));
 
             // Create or Update the main Audiobook record
-            // Use updateOrCreate with librivox_id as the key
+            // Use updateOrCreate with librivox_id (now mapped to Archive.org identifier) as the key
             $book = Audiobook::updateOrCreate(
-                ['librivox_id' => $apiBook['id']],
+                ['librivox_id' => $apiBook['identifier']], // Use Archive.org identifier as librivox_id
                 $audiobookData // Pass all data, including the generated slug
             );
 
@@ -240,61 +187,14 @@ class FetchLibriVoxAudiobooks extends Command
                 $this->info("Audiobook matched existing record, no changes: {$book->title} (Slug: {$book->slug})");
             }
 
-            // Process Sections
-            if (!empty($apiBook['sections'])) {
-                // Use updateOrCreate for sections based on audiobook_id and librivox_section_id
-                foreach ($apiBook['sections'] as $apiSection) {
-                    // Skip section if no listen_url is found or librivox_section_id is missing
-                    if (empty($apiSection['listen_url']) || empty($apiSection['id'])) {
-                         $this->warn("Skipping section '{$apiSection['title']}' for book '{$apiBook['title']}' (ID: {$apiBook['id']}) due to missing source_url or librivox_section_id.");
-                         continue;
-                    }
+            // --- Section Processing (Simplified/Removed for initial Archive.org integration) ---
+            // The Archive.org search API does not provide detailed section data or direct audio URLs.
+            // Fetching sections would require a separate API call per audiobook to the Item API (e.g., /metadata/{identifier}/files)
+            // For now, we will skip section processing.
+            $this->warn("Skipping section processing for book '{$apiBook['title']}' (Identifier: {$apiBook['identifier']}). Sections need to be fetched via Archive.org Item API.");
+            // You might want to delete old sections if they exist from previous LibriVox imports
+            // AudiobookSection::where('audiobook_id', $book->id)->delete();
 
-                    // Duration for section (from playtime in seconds)
-                    $sectionDurationStr = 'N/A';
-                    if (isset($apiSection['playtime']) && is_numeric($apiSection['playtime'])) {
-                         $sectionDurationStr = gmdate('H:i:s', (int)$apiSection['playtime']);
-                    } elseif (!empty($apiSection['playtime_string'])) {
-                         $sectionDurationStr = $apiSection['playtime_string']; // Fallback
-                    }
-
-                    // Reader Name for section
-                    $sectionReaderName = 'Unknown Reader';
-                    if (!empty($apiSection['readers']) && !empty($apiBook['sections'][0]['readers'][0]['display_name'])) {
-                        // Check if all readers are the same for all sections (simplistic check)
-                        $firstReader = $apiBook['sections'][0]['readers'][0]['display_name'];
-                        $allSameReader = true;
-                        foreach ($apiBook['sections'] as $section) {
-                            if (empty($section['readers']) || empty($section['readers'][0]['display_name']) || $section['readers'][0]['display_name'] !== $firstReader) {
-                                $allSameReader = false;
-                                break;
-                            }
-                        }
-                        if ($allSameReader) {
-                            $narratorName = $firstReader;
-                        }
-                    }
-
-
-                    $sectionData = [
-                        'audiobook_id' => $book->id,
-                        'section_number' => (int) $apiSection['section_number'],
-                        'title' => trim(strip_tags($apiSection['title'])), // Strip HTML tags
-                        'source_url' => $apiSection['listen_url'],
-                        'duration' => $sectionDurationStr,
-                        'reader_name' => $sectionReaderName, // Add reader name
-                        'librivox_section_id' => $apiSection['id'], // Ensure librivox_section_id is used
-                    ];
-
-                    // Use updateOrCreate based on audiobook_id and librivox_section_id
-                    AudiobookSection::updateOrCreate(
-                        ['audiobook_id' => $book->id, 'librivox_section_id' => $apiSection['id']],
-                        $sectionData
-                    );
-                }
-            } else {
-                 $this->warn("No sections found for book '{$apiBook['title']}' (ID: {$apiBook['id']}).");
-            }
 
             $progressBar->advance();
         }
