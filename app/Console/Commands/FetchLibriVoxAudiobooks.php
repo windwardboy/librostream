@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Audiobook;
-use App\Models\AudiobookSection; // Import the AudiobookSection model
+// use App\Models\AudiobookSection; // Removed for now as sections are not fetched from search API
 use App\Models\Category;
 use App\Services\LibriVoxService; // This service now fetches from Archive.org
 use Illuminate\Console\Command;
@@ -77,18 +77,26 @@ class FetchLibriVoxAudiobooks extends Command
 
         foreach ($apiAudiobooks as $apiBook) {
             // Archive.org uses 'identifier' as the unique ID
-            if (empty($apiBook['identifier']) || empty($apiBook['title'])) {
-                $this->warn("Skipping an entry due to missing identifier or title.");
+            // Make checks more robust: ensure key exists and value is not null/empty string
+            $identifier = $apiBook['identifier'] ?? null;
+            $title = $apiBook['title'] ?? null;
+
+            if (empty($identifier) || empty($title)) {
+                $this->warn("Skipping an entry due to missing identifier or title. Raw data: " . json_encode($apiBook));
                 $progressBar->advance();
                 continue;
             }
 
+            // Ensure identifier and title are strings and trim them
+            $identifier = trim((string) $identifier);
+            $title = trim((string) $title);
+
             // Category (from 'subject' field)
             $categoryName = 'Uncategorized'; // Default category
             if (!empty($apiBook['subject'])) {
-                // Subjects can be semicolon-separated, take the first one or process as needed
-                $subjects = is_array($apiBook['subject']) ? $apiBook['subject'] : explode(';', $apiBook['subject']);
-                $categoryName = trim($subjects[0]);
+                // Subjects can be semicolon-separated or an array
+                $subjects = is_array($apiBook['subject']) ? $apiBook['subject'] : explode(';', (string) $apiBook['subject']);
+                $categoryName = trim($subjects[0]); // Take the first subject as the category
             }
 
             // Generate slug for the category
@@ -109,9 +117,9 @@ class FetchLibriVoxAudiobooks extends Command
             // Author (from 'creator' field)
             $authorName = 'Unknown Author';
             if (!empty($apiBook['creator'])) {
-                // Creator can be a string or an array, take the first one or process as needed
-                $creators = is_array($apiBook['creator']) ? $apiBook['creator'] : explode(';', $apiBook['creator']);
-                $authorName = trim($creators[0]);
+                // Creator can be a string or an array
+                $creators = is_array($apiBook['creator']) ? $creators : explode(';', (string) $apiBook['creator']);
+                $authorName = trim($creators[0]); // Take the first creator as the author
             }
 
             // Narrator (Archive.org search API doesn't directly provide narrator, often part of creator/description)
@@ -119,16 +127,16 @@ class FetchLibriVoxAudiobooks extends Command
             $narratorName = 'Various Readers';
             // You might need more advanced logic here if narrator is consistently in 'creator' or 'description'
 
-            // Duration from 'runtime' (e.g., "01:23:45")
+            // Duration from 'runtime' (e.g., "7:46:35")
             $durationStr = $apiBook['runtime'] ?? 'N/A';
 
             // Description (strip HTML tags if necessary, Archive.org descriptions are usually plain text)
-            $description = !empty($apiBook['description']) ? strip_tags($apiBook['description']) : 'No description available.';
+            $description = !empty($apiBook['description']) ? strip_tags((string) $apiBook['description']) : 'No description available.';
             $description = Str::limit($description, 1000); // Limit description length if necessary for DB
 
             // Main Audiobook Data
             $audiobookData = [
-                'title' => trim($apiBook['title']),
+                'title' => $title,
                 'author' => $authorName,
                 'narrator' => $narratorName, // Will be 'Various Readers' for now
                 'description' => $description,
@@ -141,30 +149,30 @@ class FetchLibriVoxAudiobooks extends Command
             ];
 
             // Generate a unique slug for the audiobook
-            $baseSlug = Str::slug($apiBook['title']);
+            $baseSlug = Str::slug($title);
             $slug = $baseSlug;
             $counter = 1;
 
             // Check for slug uniqueness and append counter if necessary
-            while (Audiobook::where('slug', $slug)->where('librivox_id', '!=', $apiBook['identifier'])->exists()) {
+            while (Audiobook::where('slug', $slug)->where('librivox_id', '!=', $identifier)->exists()) {
                 $slug = $baseSlug . '-' . $counter++;
             }
 
             $audiobookData['slug'] = $slug;
 
-            $this->info("Processing book: {$apiBook['title']} (Identifier: {$apiBook['identifier']}), Slug: {$slug}");
+            $this->info("Processing book: {$title} (Identifier: {$identifier}), Slug: {$slug}");
             $this->info("Data for updateOrCreate: " . json_encode($audiobookData));
 
             // Create or Update the main Audiobook record
             // Use updateOrCreate with librivox_id (now mapped to Archive.org identifier) as the key
             $book = Audiobook::updateOrCreate(
-                ['librivox_id' => $apiBook['identifier']], // Use Archive.org identifier as librivox_id
+                ['librivox_id' => $identifier], // Use Archive.org identifier as librivox_id
                 $audiobookData // Pass all data, including the generated slug
             );
 
             // Explicitly save the slug if it was null (for existing records before slug migration)
             if (is_null($book->slug)) {
-                 $baseSlug = Str::slug($apiBook['title']);
+                 $baseSlug = Str::slug($title);
                  $slug = $baseSlug;
                  $counter = 1;
 
@@ -191,7 +199,7 @@ class FetchLibriVoxAudiobooks extends Command
             // The Archive.org search API does not provide detailed section data or direct audio URLs.
             // Fetching sections would require a separate API call per audiobook to the Item API (e.g., /metadata/{identifier}/files)
             // For now, we will skip section processing.
-            $this->warn("Skipping section processing for book '{$apiBook['title']}' (Identifier: {$apiBook['identifier']}). Sections need to be fetched via Archive.org Item API.");
+            $this->warn("Skipping section processing for book '{$title}' (Identifier: {$identifier}). Sections need to be fetched via Archive.org Item API.");
             // You might want to delete old sections if they exist from previous LibriVox imports
             // AudiobookSection::where('audiobook_id', $book->id)->delete();
 
