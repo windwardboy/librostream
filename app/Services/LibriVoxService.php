@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Log;
 
 class LibriVoxService
 {
-    // Change base URL to Archive.org's advanced search API
     protected string $baseUrl = 'https://archive.org/advancedsearch.php';
 
     /**
@@ -16,20 +15,24 @@ class LibriVoxService
      * @param int $limit The number of records to fetch.
      * @param int $offset The offset for pagination.
      * @param array $params Additional parameters for the API query.
-     * @return array An array of audiobook data, or an empty array on failure.
+     * @return array An array containing 'books' and 'total_found'.
      */
     public function fetchAudiobooks(int $limit = 5, int $offset = 0, array $params = []): array
     {
         $defaultParams = [
-            // Query for LibriVox audiobooks
-            'q' => 'collection:librivox AND mediatype:audio',
-            'fl' => 'identifier,title,creator,description,publicdate,subject,runtime,avg_rating,num_reviews,language,image,url,format', // Fields to return as a comma-separated string
-            'rows' => $limit, // Archive.org uses 'rows' instead of 'limit'
-            'start' => $offset, // Archive.org uses 'start' instead of 'offset'
-            'output' => 'json', // Request JSON output
+            'q' => 'subject:(librivox) AND mediatype:audio',
+            'fl' => 'identifier,title,creator,description,publicdate,subject,runtime,avg_rating,num_reviews,language,image,url,format',
+            'rows' => $limit,
+            'start' => $offset,
+            'output' => 'json',
         ];
 
-        // Merge default params with any custom params provided
+        // Add date range to the query if provided
+        if (isset($params['date_range'])) {
+            $defaultParams['q'] .= " AND publicdate:[{$params['date_range']}]";
+            unset($params['date_range']); // Remove from params to avoid duplication
+        }
+
         $queryParams = array_merge($defaultParams, $params);
 
         try {
@@ -37,44 +40,31 @@ class LibriVoxService
 
             if ($response->successful()) {
                 $data = $response->json();
-                // Archive.org search results are typically under 'response' -> 'docs'
                 $audiobooks = $data['response']['docs'] ?? [];
+                $numFound = $data['response']['numFound'] ?? 0;
 
                 Log::info('Archive.org API successful response.', [
                     'status' => $response->status(),
                     'results_count' => count($audiobooks),
-                    'url' => $this->baseUrl,
-                    'params' => $queryParams
+                    'total_found' => $numFound,
+                    'offset' => $offset,
                 ]);
 
-                return $audiobooks;
+                // Always return a consistent format
+                return [
+                    'books' => $audiobooks,
+                    'total_found' => $numFound,
+                ];
             } else {
                 Log::error('Archive.org API request failed.', [
                     'status' => $response->status(),
                     'response_body' => $response->body(),
-                    'url' => $this->baseUrl,
-                    'params' => $queryParams
                 ]);
-                return [];
+                return ['books' => [], 'total_found' => 0];
             }
-        } catch (\Illuminate\Http\Client\RequestException $e) {
-            Log::error('Archive.org API request exception: ' . $e->getMessage(), [
-                'url' => $this->baseUrl,
-                'params' => $queryParams,
-                'exception_class' => get_class($e),
-                'exception_message' => $e->getMessage(),
-                'exception_trace' => $e->getTraceAsString()
-            ]);
-            return [];
         } catch (\Exception $e) {
-            Log::error('An unexpected error occurred while fetching from Archive.org API: ' . $e->getMessage(), [
-                'url' => $this->baseUrl,
-                'params' => $queryParams,
-                'exception_class' => get_class($e),
-                'exception_message' => $e->getMessage(),
-                'exception_trace' => $e->getTraceAsString()
-            ]);
-            return [];
+            Log::error('Archive.org API request exception: ' . $e->getMessage());
+            return ['books' => [], 'total_found' => 0];
         }
     }
 }
