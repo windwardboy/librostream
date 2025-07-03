@@ -19,6 +19,9 @@
             </div>
         </section>
 
+        {{-- Test Deployment Marker --}}
+        <h3 style="text-align: center; color: red; margin-top: 20px;">Hello World - Deployment Test</h3>
+
         {{-- Features Widget (Overlapping) --}}
         <div class="relative px-4 sm:px-6 lg:px-8 -mt-16 z-20">
             @if(isset($totalAudiobooks, $uniqueLanguages, $uniqueReaders))
