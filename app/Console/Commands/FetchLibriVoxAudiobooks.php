@@ -25,7 +25,7 @@ class FetchLibriVoxAudiobooks extends Command
      *
      * @var string
      */
-    protected $description = 'Fetch audiobooks from the Archive.org (LibriVox collection) API and store them in the database.';
+    protected $description = 'Fetch audiobooks from the LibriVox API and store them in the database.';
 
     protected LibriVoxService $libriVoxService;
 
@@ -49,20 +49,8 @@ class FetchLibriVoxAudiobooks extends Command
     {
         $limit = (int) $this->option('limit');
         $offset = (int) $this->option('offset');
-        $since = $this->option('since'); // 'since' parameter might need custom handling for Archive.org
-
-        $this->info("Fetching {$limit} audiobooks from Archive.org (LibriVox collection) API (offset: {$offset}" . ($since ? ", since: {$since}" : "") . ")...");
-
-        $apiParams = [];
-        if ($since) {
-            // Archive.org's 'publicdate' field can be used with a range query
-            // Example: 'publicdate:[2023-01-01 TO *]'
-            // This would require adjusting the 'q' parameter in LibriVoxService
-            // For simplicity, we'll pass it, but the service needs to interpret it.
-            $apiParams['publicdate'] = $since;
-        }
-
-        $isDryRun = $this->option('dry-run');
+        $since = $this->option('since');
+        $isDryRun = (bool) $this->option('dry-run'); // Cast to boolean
 
         $this->info("Fetching {$limit} audiobooks from LibriVox API (offset: {$offset}" . ($since ? ", since: {$since}" : "") . ")...");
         if ($isDryRun) {

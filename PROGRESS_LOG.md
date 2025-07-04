@@ -30,25 +30,27 @@ This revised strategy aims to decouple the import process from direct cron job e
     *   **Security**: The webhook endpoint is secured using a shared secret token (`config('app.import_webhook_token')`).
 
 4.  **Queue Worker Configuration (User Action)**:
-    *   **Action Required by User**: Ensure a Laravel queue worker is configured and running persistently on your Forge server. This is typically set up under your Site's "Daemons" or Server's "Daemons" section in Forge. This worker will process the `ImportAudiobookJob` instances.
+    *   **Action Required by User**: Ensure a Laravel queue worker is configured and running persistently on your Forge server. This is typically set up under your Site's "Daemons" or Server's "Daemons" section in Forge. This worker will process the `ImportAudiobookJob` instances. (Completed)
 
 5.  **Automation Trigger**:
-    *   Instead of a direct cron job for `librivox:full-import`, an external service (e.g., a free online cron job service, or a simple `curl` command from another server) will make a periodic HTTP POST request to the secure `/api/import/trigger` endpoint. This decouples the import trigger from Forge's potentially problematic scheduler SSH connectivity.
+    *   Instead of a direct cron job for `librivox:full-import`, an external service (e.g., a free online cron job service, or a simple `curl` command from another server) will make a periodic HTTP POST request to the secure `/api/import/trigger` endpoint. This decouples the import trigger from Forge's potentially problematic scheduler SSH connectivity. (Completed: Configured to run every 15 minutes).
 
 6.  **Revised Scheduling (Local Change)**:
     *   **`app/Console/Kernel.php`**: The `librivox:full-import` command is **no longer scheduled directly** in this file. Its execution is now managed by the webhook dispatching jobs. (Completed)
 
 7.  **Cleanup of Old Scheduler (User Action)**:
-    *   **Action Required by User**: Delete any manually created `librivox:full-import` schedulers in Laravel Forge to avoid conflicts. The automatically created `php8.3 /home/librostreamcom/librostream.com/artisan schedule:run` cron job should remain active, as it manages other Laravel scheduled tasks (though not the import in this new model).
+    *   **Action Required by User**: Delete any manually created `librivox:full-import` schedulers in Laravel Forge to avoid conflicts. The automatically created `php8.3 /home/librostreamcom/librostream.com/artisan schedule:run` cron job should remain active, as it manages other Laravel scheduled tasks (though not the import in this new model). (Completed)
 
 **Current Status & Resolved Issues:**
 *   **Images and Layout**: Images are now working correctly on audiobook detail pages, and the "The Librostream Experience" layout issue is resolved.
 *   **"Märchen (Index aller Märchen) (LibriVox ID: 66)"**: This book still shows "No audio tracks found for sections". User clarified this is an index page on LibriVox that links to other audiobooks, not a directly playable audiobook. (Decision on how to handle this deferred for future discussion).
-*   **Forge Scheduler Failure**: The persistent SSH connectivity issue for scheduled jobs is being bypassed by this new webhook-triggered approach.
+*   **Forge Scheduler Failure**: The persistent SSH connectivity issue for scheduled jobs is being bypassed by this new webhook-triggered approach, which is now fully implemented and configured.
 
-**Next Steps (Requires User Action for Deployment & Full Automation):**
-1.  **Delete Old Scheduler**: Delete the manually created `librivox:full-import` scheduler in Forge.
-2.  **Deploy Changes**: Commit and push all local code changes to your Git repository. Laravel Forge will then deploy the updated application.
-3.  **Configure Queue Worker**: Ensure a Laravel queue worker is running on your Forge server.
-4.  **Set up External Trigger**: Configure an external service to send periodic POST requests to your new `/api/import/trigger` endpoint with the correct security token.
-5.  **Verify Live Site**: After deployment and initial trigger, confirm the live site is populating with data.
+**File and Folder Cleanup (Completed):**
+*   `app/Console/Commands/FullLibriVoxSectionsImport.php` (Deleted)
+*   `app/Console/Commands/BackfillAudiobookSlugs.php` (Deleted)
+*   `TROUBLESHOOTING_LIVE_SERVER.md` (Deleted)
+*   `app/Console/Commands/FetchAudiobookSections.php` (Deleted)
+
+**Next Steps (Requires User Action for Monitoring):**
+1.  **Verify Live Site**: Monitor the live site over the next few days to confirm that audiobooks are populating, images are displaying correctly, and all features are working as expected.
