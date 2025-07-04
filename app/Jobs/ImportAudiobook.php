@@ -26,9 +26,9 @@ class ImportAudiobook implements ShouldQueue
 
             // Call the librivox:full-import Artisan command
             // This command handles its own pagination, progress, and error logging.
-            Artisan::call('librivox:full-import');
+            Artisan::call('librivox:import');
 
-            Log::info('librivox:full-import command finished within ImportAudiobook job.');
+            Log::info('librivox:import command finished within ImportAudiobook job.');
 
         } catch (\Exception $e) {
             Log::error('ImportAudiobook job failed: ' . $e->getMessage(), [

@@ -11,7 +11,7 @@ The project has faced persistent issues with audiobook imports across different 
 
 **Solution Strategy: Webhook-Triggered, Queue-Based Import using Official LibriVox API**
 
-This revised strategy aims to decouple the import process from direct cron job execution, leveraging Laravel's robust queue system and a secure HTTP trigger for maximum reliability and data integrity.
+This revised strategy aimed to decouple the import process from direct cron job execution, leveraging Laravel's robust queue system and a secure HTTP trigger for maximum reliability and data integrity.
 
 **Key Components & Implementation Plan:**
 
@@ -41,16 +41,13 @@ This revised strategy aims to decouple the import process from direct cron job e
 7.  **Cleanup of Old Scheduler (User Action)**:
     *   **Action Required by User**: Delete any manually created `librivox:full-import` schedulers in Laravel Forge to avoid conflicts. The automatically created `php8.3 /home/librostreamcom/librostream.com/artisan schedule:run` cron job should remain active, as it manages other Laravel scheduled tasks (though not the import in this new model). (Completed)
 
-**Current Status & Resolved Issues:**
+**Current Status & Persistent Issues:**
 *   **Images and Layout**: Images are now working correctly on audiobook detail pages, and the "The Librostream Experience" layout issue is resolved.
 *   **"Märchen (Index aller Märchen) (LibriVox ID: 66)"**: This book still shows "No audio tracks found for sections". User clarified this is an index page on LibriVox that links to other audiobooks, not a directly playable audiobook. (Decision on how to handle this deferred for future discussion).
-*   **Forge Scheduler Failure**: The persistent SSH connectivity issue for scheduled jobs is being bypassed by this new webhook-triggered approach, which is now fully implemented and configured.
+*   **Live Server Import Failure (500 Internal Server Error)**: The webhook trigger consistently results in a `500 Internal Server Error` on the live server.
+    *   **Root Cause Identified**: The `laravel.log` repeatedly shows `Archive.org API request failed` errors, indicating that `app/Console/Commands/FetchLibriVoxAudiobooks.php` on the live server is still making calls to the old Archive.org API, despite multiple attempts to update this file locally using `replace_in_file` and `write_to_file`.
+    *   **Underlying Problem**: There appears to be a persistent issue with file synchronization or Git tracking in the local environment, preventing the correct code from being committed and deployed to the live server. Manual verification via `cat` on the live server confirmed the old code persists.
+    *   **Permissions**: Permissions for `storage` and `bootstrap/cache` were re-verified and fixed, allowing `php artisan cache:clear` to succeed, but the core code issue remains.
+    *   **Debugging Difficulty**: The `500 Internal Server Error` is occurring before detailed Laravel logging can capture the specific exception, making direct debugging difficult. Temporarily enabling `APP_DEBUG=true` on the live server confirmed the `Archive.org API` error in the response body.
 
-**File and Folder Cleanup (Completed):**
-*   `app/Console/Commands/FullLibriVoxSectionsImport.php` (Deleted)
-*   `app/Console/Commands/BackfillAudiobookSlugs.php` (Deleted)
-*   `TROUBLESHOOTING_LIVE_SERVER.md` (Deleted)
-*   `app/Console/Commands/FetchAudiobookSections.php` (Deleted)
-
-**Next Steps (Requires User Action for Monitoring):**
-1.  **Verify Live Site**: Monitor the live site over the next few days to confirm that audiobooks are populating, images are displaying correctly, and all features are working as expected.
+**Decision**: Due to persistent and unresolvable issues with file modification/deployment and the inability to reliably update core application files, this task is being concluded. A new task will be initiated to address the underlying environment/tooling issues or to find an alternative approach.

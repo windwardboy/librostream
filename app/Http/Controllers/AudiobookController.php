@@ -6,6 +6,7 @@ use App\Models\Audiobook;
 use App\Models\Category; // Import the Category model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; // Import DB facade
+use Illuminate\Support\Facades\Log; // Import Log facade
 use Illuminate\Support\Str; // Import Str facade for slugification
 
 class AudiobookController extends Controller
