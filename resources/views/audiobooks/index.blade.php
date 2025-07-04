@@ -3,9 +3,6 @@
 @section('title', 'Stream Classic Audiobooks for Free')
 
 @section('content')
-    {{-- Test Deployment Marker --}}
-    <h3 style="text-align: center; color: black; background-color: yellow; padding: 10px; margin-top: 0;">Hello World - Deployment Test</h3>
-
     <div class="relative">
         {{-- Hero Section --}}
         <section class="animated-gradient text-white py-24 sm:py-32 rounded-lg shadow-xl relative overflow-hidden">

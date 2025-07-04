@@ -85,6 +85,6 @@ Previous import attempts resulted in system crashes and corrupted/incomplete dat
 *   **"Märchen (Index aller Märchen) (LibriVox ID: 66)"**: This book still shows "No audio tracks found for sections". User clarified this is an index page on LibriVox that links to other audiobooks, not a directly playable audiobook. (Decision on how to handle this deferred).
 
 **Next Steps (Requires User Action for Deployment & Full Automation):**
-1.  **Deployment**: User confirmed migration to Laravel Forge and resolution of deployment issues. The next step is to deploy the current code changes to the live server.
+1.  **Deployment**: User confirmed migration to Laravel Forge and resolution of deployment issues. Code changes have been successfully deployed to the live server via Git push.
 2.  **Verify Live Site**: After successful deployment, confirm the homepage counters are correct and the "Hello World" test marker is visible.
-3.  **Set up Cron Job in Forge**: Configure the `librivox:full-import` command as a scheduled task within Laravel Forge to automate the full import process.
+3.  **Set up Cron Job in Forge**: The `librivox:full-import` command has been successfully configured as a nightly scheduled task within Laravel Forge, automating the full import process. User will monitor and report back.
