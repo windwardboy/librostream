@@ -15,8 +15,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // Schedule the LibriVox full import to run every minute for testing
-        $schedule->command('librivox:full-import')->everyMinute();
+        // The librivox:full-import command is now triggered via a webhook dispatching a job.
+        // No direct scheduling needed here for the import command itself.
+        // $schedule->command('librivox:full-import')->dailyAt('02:00'); // Example of how it was previously scheduled
     }
 
     /**

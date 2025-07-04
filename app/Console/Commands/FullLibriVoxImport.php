@@ -3,82 +3,94 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
+use App\Services\LibriVoxService;
+use App\Models\Audiobook;
+use App\Models\AudiobookSection;
+use App\Models\ImportProgress;
+use Illuminate\Support\Facades\Log;
 
 class FullLibriVoxImport extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'librivox:full-import {--limit=100 : Number of audiobooks to fetch per batch} {--delay=1 : Delay in seconds between batches}';
+    protected $signature = 'librivox:full-import 
+        {--limit=5 : Number of audiobooks to process per run}
+        {--skip=66 : Comma-separated IDs to skip}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Continuously fetches audiobooks from LibriVox (Archive.org) until no new books are found.';
+    protected $description = 'Reliably imports audiobooks from LibriVox API with progress tracking';
 
-    /**
-     * Execute the console command.
-     *
-     * @return int
-     */
-    public function handle()
+    public function handle(LibriVoxService $service)
     {
-        $limit = (int) $this->option('limit');
-        $delay = (int) $this->option('delay');
-        $offset = 0;
-        $totalFetched = 0;
-        $continueFetching = true;
+        $limit = (int)$this->option('limit');
+        $skipIds = array_map('trim', explode(',', $this->option('skip')));
+        
+        // Get or create progress tracking
+        $progress = ImportProgress::firstOrCreate(
+            ['type' => 'librivox_audiobooks'],
+            ['last_id' => null, 'offset' => 0, 'errors' => '[]']
+        );
 
-        $this->info("Starting full LibriVox audiobook import...");
+        $this->info("Starting import from offset {$progress->offset}...");
 
-        while ($continueFetching) {
-            $this->info("Fetching batch from offset {$offset} with limit {$limit}...");
+        try {
+            $result = $service->fetchAudiobooks($limit, $progress->offset);
+            $batch = $result['books'] ?? [];
+            
+            if (empty($batch)) {
+                $this->info("No more audiobooks found. Import complete.");
+                return Command::SUCCESS;
+            }
 
-            // Call the existing librivox:fetch command
-            $resultCode = Artisan::call('librivox:fetch', [
-                '--limit' => $limit,
-                '--offset' => $offset,
-            ]);
+            $processed = 0;
+            $errors = json_decode($progress->errors, true);
 
-            $output = Artisan::output();
-            $this->info($output);
-
-            // Check if any audiobooks were actually fetched in this batch
-            // We need to parse the output to determine this.
-            // The librivox:fetch command outputs "X audiobooks fetched from API."
-            preg_match('/(\d+) audiobooks fetched from API\./', $output, $matches);
-            $fetchedInBatch = isset($matches[1]) ? (int) $matches[1] : 0;
-
-            if ($fetchedInBatch > 0) {
-                $totalFetched += $fetchedInBatch;
-                $offset += $limit;
-                $this->info("Fetched {$fetchedInBatch} audiobooks in this batch. Total fetched: {$totalFetched}.");
-
-                // Stop if the total fetched count reaches or exceeds the user-defined limit
-                if ($this->option('limit') !== null && $totalFetched >= (int) $this->option('limit')) {
-                    $this->info("Reached the requested limit of " . $this->option('limit') . " audiobooks. Ending import.");
-                    $continueFetching = false;
-                } else {
-                    sleep($delay); // Pause to respect API rate limits
+            foreach ($batch as $audiobookData) {
+                if (in_array($audiobookData['librivox_id'], $skipIds)) {
+                    $this->info("Skipping audiobook ID {$audiobookData['librivox_id']}");
+                    continue;
                 }
-            } else {
-                $this->info("No new audiobooks found in this batch. Ending import.");
-                $continueFetching = false;
+
+                try {
+                    // Import audiobook and sections
+                    $audiobook = Audiobook::updateOrCreate(
+                        ['librivox_id' => $audiobookData['librivox_id']],
+                        $audiobookData
+                    );
+
+                    $sections = $service->fetchAudiobookTracks($audiobookData['librivox_id']);
+                    AudiobookSection::where('audiobook_id', $audiobook->id)->delete();
+                    foreach ($sections as $section) {
+                        AudiobookSection::create($section);
+                    }
+
+                    $progress->last_id = $audiobookData['librivox_id'];
+                    $processed++;
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'id' => $audiobookData['librivox_id'],
+                        'error' => $e->getMessage()
+                    ];
+                    Log::error("Failed to import audiobook {$audiobookData['librivox_id']}: " . $e->getMessage());
+                }
             }
 
-            if ($resultCode !== 0) {
-                $this->error("librivox:fetch command failed with code {$resultCode}. Aborting full import.");
-                $continueFetching = false;
+            $progress->offset += $limit;
+            $progress->errors = json_encode($errors);
+            $progress->save();
+
+            $this->info("Processed {$processed} audiobooks in this batch.");
+            $totalFound = isset($result['total_found']) ? $result['total_found'] : 'unknown';
+            $this->info("Total found: " . $totalFound);
+            $this->info("Next offset: {$progress->offset}, Last ID: {$progress->last_id}");
+            
+            if (!empty($errors)) {
+                $this->warn(count($errors) . " errors encountered in this batch.");
             }
+
+            return Command::SUCCESS;
+
+        } catch (\Exception $e) {
+            Log::error("Full import failed: " . $e->getMessage());
+            $this->error("Import failed: " . $e->getMessage());
+            return Command::FAILURE;
         }
-
-        $this->info("Full LibriVox audiobook import complete. Total audiobooks processed: {$totalFetched}.");
-
-        return Command::SUCCESS;
     }
 }

@@ -224,4 +224,33 @@ class AudiobookController extends Controller
     {
         //
     }
+
+    /**
+     * Trigger the audiobook import via a secure webhook.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function triggerImport(Request $request)
+    {
+        // Implement basic security: require a secret token
+        $secretToken = config('app.import_webhook_token'); // Store this in your .env file
+        if (empty($secretToken) || $request->header('X-Import-Token') !== $secretToken) {
+            Log::warning('Unauthorized attempt to trigger import webhook.', [
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Dispatch the FullLibriVoxImport command as a job
+        // We'll create a dedicated job for this, or dispatch the command directly if it's self-contained.
+        // For now, let's assume we'll dispatch the command as a job.
+        // Dispatch the ImportAudiobook job. This job will in turn call the librivox:full-import command.
+        \App\Jobs\ImportAudiobook::dispatch();
+
+        Log::info('Audiobook import triggered via webhook.');
+
+        return response()->json(['message' => 'Audiobook import triggered successfully.']);
+    }
 }
