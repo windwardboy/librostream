@@ -49,7 +49,7 @@ class FetchLibriVoxAudiobooks extends Command
     {
         $limit = (int) $this->option('limit');
         $offset = (int) $this->option('offset');
-        $since = $this->option('since');
+        $since = (string) $this->option('since'); // Cast to string
         $isDryRun = (bool) $this->option('dry-run'); // Cast to boolean
 
         $this->info("Fetching {$limit} audiobooks from LibriVox API (offset: {$offset}" . ($since ? ", since: {$since}" : "") . ")...");
