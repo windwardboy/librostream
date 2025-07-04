@@ -22,6 +22,7 @@ class Audiobook extends Model
         'librivox_id',
         'language',
         'librivox_url',
+        'slug', // Add slug to fillable
     ];
 
     /**

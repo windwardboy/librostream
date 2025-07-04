@@ -58,7 +58,14 @@ class FullLibriVoxImport extends Command
                 $totalFetched += $fetchedInBatch;
                 $offset += $limit;
                 $this->info("Fetched {$fetchedInBatch} audiobooks in this batch. Total fetched: {$totalFetched}.");
-                sleep($delay); // Pause to respect API rate limits
+
+                // Stop if the total fetched count reaches or exceeds the user-defined limit
+                if ($this->option('limit') !== null && $totalFetched >= (int) $this->option('limit')) {
+                    $this->info("Reached the requested limit of " . $this->option('limit') . " audiobooks. Ending import.");
+                    $continueFetching = false;
+                } else {
+                    sleep($delay); // Pause to respect API rate limits
+                }
             } else {
                 $this->info("No new audiobooks found in this batch. Ending import.");
                 $continueFetching = false;
