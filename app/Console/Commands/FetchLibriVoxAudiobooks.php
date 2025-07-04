@@ -167,153 +167,153 @@ class FetchLibriVoxAudiobooks extends Command
                 } elseif (isset($apiBook['url_cover_image']) && filter_var($apiBook['url_cover_image'], FILTER_VALIDATE_URL)) {
                     // Fallback to url_cover_image if it's a valid URL
                     $coverImage = $apiBook['url_cover_image'];
-                } elseif (isset($apiBook['url_librivox'])) {
-                    // Last resort: try to construct from url_librivox, removing potential double slashes
-                    $constructedUrl = rtrim($apiBook['url_librivox'], '/') . '/cover_small.jpg';
-                    if (filter_var($constructedUrl, FILTER_VALIDATE_URL)) {
-                        $coverImage = $constructedUrl;
-                    }
-                }
-
-                // Final fallback to a generic placeholder if no valid image URL is found
-                if (empty($coverImage) || !filter_var($coverImage, FILTER_VALIDATE_URL)) {
-                    $coverImage = 'https://librivox.org/images/librivox_logo_small.png'; // Default placeholder
-                }
-
-                // Main Audiobook Data
-                $audiobookData = [
-                    'title' => $title,
-                    'author' => $authorName,
-                    'narrator' => $narratorName,
-                    'description' => $description,
-                    'cover_image' => $coverImage,
-                    'duration' => $durationStr,
-                    'source_url' => null, // Main source_url is null, sections will have actual files
-                    'category_id' => $category->id,
-                    'language' => $fullLanguageName,
-                    'librivox_url' => $apiBook['url_librivox'] ?? null, // Direct LibriVox project page URL
-                    'librivox_id' => $librivoxId, // Use LibriVox project ID as librivox_id
-                ];
-
-                // Generate a unique slug for the audiobook
-                $baseSlug = Str::slug($title);
-                $slug = $baseSlug;
-                $counter = 1;
-
-                // Check for slug uniqueness and append counter if necessary
-                while (Audiobook::where('slug', $slug)->where('librivox_id', '!=', $librivoxId)->exists()) {
-                    $slug = $baseSlug . '-' . $counter++;
-                }
-                $audiobookData['slug'] = $slug;
-
-                $this->info("Processing book: {$title} (LibriVox ID: {$librivoxId}), Slug: {$slug}");
-                Log::info("Data for updateOrCreate:", $audiobookData);
-
-                $book = null;
-                if (!$isDryRun) {
-                    // Create or Update the main Audiobook record
-                    $book = Audiobook::updateOrCreate(
-                        ['librivox_id' => $librivoxId],
-                        $audiobookData
-                    );
-
-                    if ($book->wasRecentlyCreated) {
-                        $createdCount++;
-                        $this->info("Created audiobook: {$book->title} (Slug: {$book->slug})");
-                    } elseif ($book->wasChanged()) {
-                        $updatedCount++;
-                        $this->info("Updated audiobook: {$book->title} (Slug: {$book->slug})");
-                    } else {
-                        $this->info("Audiobook matched existing record, no changes: {$book->title} (Slug: {$book->slug})");
-                    }
-                } else {
-                    $this->info("DRY RUN: Would create/update audiobook: {$title} (Slug: {$slug})");
-                    $book = (object)['id' => 99999, 'librivox_id' => $librivoxId, 'title' => $title, 'narrator' => $narratorName]; // Mock book for dry run
-                }
-
-
-                // --- Section Processing ---
-                // Fetch detailed track metadata for sections using the LibriVox audiotracks API
-                $audioTracks = $this->libriVoxService->fetchAudiobookTracks($librivoxId);
-
-                if (!empty($audioTracks)) {
-                    if (!$isDryRun) {
-                        // Clear existing sections for this audiobook to prevent duplicates/stale data
-                        AudiobookSection::where('audiobook_id', $book->id)->delete();
-                        $this->info("Cleared existing sections for audiobook: {$book->title}");
-                    } else {
-                        $this->info("DRY RUN: Would clear existing sections for audiobook: {$book->title}");
-                    }
-
-                    $sectionNumber = 1;
-                    foreach ($audioTracks as $track) {
-                        try {
-                            $sectionTitle = $track['section_title'] ?? 'Part ' . $sectionNumber;
-                            $sourceUrl = $track['listen_url'] ?? null; // Direct listen URL from LibriVox API
-                            $duration = $track['playtime'] ?? null; // Playtime in H:M:S format
-
-                            if (empty($sourceUrl)) {
-                                $this->warn("Skipping section '{$sectionTitle}' for book '{$book->title}' due to missing source URL.");
-                                continue;
-                            }
-
-                            if (!$isDryRun) {
-                                AudiobookSection::create([
-                                    'audiobook_id' => $book->id,
-                                    'title' => $sectionTitle,
-                                    'section_number' => $sectionNumber,
-                                    'source_url' => $sourceUrl,
-                                    'duration' => $duration,
-                                    'reader_name' => $track['reader'] ?? $book->narrator, // Prefer section-specific reader, fallback to book narrator
-                                ]);
-                            } else {
-                                $this->info("DRY RUN: Would create section '{$sectionTitle}' for audiobook: {$book->title}");
-                            }
-                            $sectionNumber++;
-                        } catch (\Exception $e) {
-                            Log::error("Failed to process section for book ID {$librivoxId}, section number {$sectionNumber}: " . $e->getMessage(), [
-                                'exception' => $e,
-                                'track_data' => $track,
-                            ]);
-                            $this->error("Error processing section for book '{$book->title}'. See logs for details.");
+                    } elseif (isset($apiBook['url_librivox'])) {
+                        // Last resort: try to construct from url_librivox, removing potential double slashes
+                        $constructedUrl = rtrim($apiBook['url_librivox'], '/') . '/cover_small.jpg';
+                        if (filter_var($constructedUrl, FILTER_VALIDATE_URL)) {
+                            $coverImage = $constructedUrl;
                         }
                     }
-                    $this->info("Imported " . (count($audioTracks)) . " sections for audiobook: {$book->title}");
-                } else {
-                    $this->warn("No audio tracks found for sections for book: {$book->title} (LibriVox ID: {$librivoxId}).");
+
+                    // Final fallback to a generic placeholder if no valid image URL is found
+                    if (empty($coverImage) || !filter_var($coverImage, FILTER_VALIDATE_URL)) {
+                        $coverImage = 'https://librivox.org/images/librivox_logo_small.png'; // Default placeholder
+                    }
+
+                    // Main Audiobook Data
+                    $audiobookData = [
+                        'title' => $title,
+                        'author' => $authorName,
+                        'narrator' => $narratorName,
+                        'description' => $description,
+                        'cover_image' => $coverImage,
+                        'duration' => $durationStr,
+                        'source_url' => null, // Main source_url is null, sections will have actual files
+                        'category_id' => $category->id,
+                        'language' => $fullLanguageName,
+                        'librivox_url' => $apiBook['url_librivox'] ?? null, // Direct LibriVox project page URL
+                        'librivox_id' => $librivoxId, // Use LibriVox project ID as librivox_id
+                    ];
+
+                    // Generate a unique slug for the audiobook
+                    $baseSlug = Str::slug($title);
+                    $slug = $baseSlug;
+                    $counter = 1;
+
+                    // Check for slug uniqueness and append counter if necessary
+                    while (Audiobook::where('slug', $slug)->where('librivox_id', '!=', $librivoxId)->exists()) {
+                        $slug = $baseSlug . '-' . $counter++;
+                    }
+                    $audiobookData['slug'] = $slug;
+
+                    $this->info("Processing book: {$title} (LibriVox ID: {$librivoxId}), Slug: {$slug}");
+                    Log::info("Data for updateOrCreate:", $audiobookData);
+
+                    $book = null;
+                    if (!$isDryRun) {
+                        // Create or Update the main Audiobook record
+                        $book = Audiobook::updateOrCreate(
+                            ['librivox_id' => $librivoxId],
+                            $audiobookData
+                        );
+
+                        if ($book->wasRecentlyCreated) {
+                            $createdCount++;
+                            $this->info("Created audiobook: {$book->title} (Slug: {$book->slug})");
+                        } elseif ($book->wasChanged()) {
+                            $updatedCount++;
+                            $this->info("Updated audiobook: {$book->title} (Slug: {$book->slug})");
+                        } else {
+                            $this->info("Audiobook matched existing record, no changes: {$book->title} (Slug: {$book->slug})");
+                        }
+                    } else {
+                        $this->info("DRY RUN: Would create/update audiobook: {$title} (Slug: {$slug})");
+                        $book = (object)['id' => 99999, 'librivox_id' => $librivoxId, 'title' => $title, 'narrator' => $narratorName]; // Mock book for dry run
+                    }
+
+
+                    // --- Section Processing ---
+                    // Fetch detailed track metadata for sections using the LibriVox audiotracks API
+                    $audioTracks = $this->libriVoxService->fetchAudiobookTracks($librivoxId);
+
+                    if (!empty($audioTracks)) {
+                        if (!$isDryRun) {
+                            // Clear existing sections for this audiobook to prevent duplicates/stale data
+                            AudiobookSection::where('audiobook_id', $book->id)->delete();
+                            $this->info("Cleared existing sections for audiobook: {$book->title}");
+                        } else {
+                            $this->info("DRY RUN: Would clear existing sections for audiobook: {$book->title}");
+                        }
+
+                        $sectionNumber = 1;
+                        foreach ($audioTracks as $track) {
+                            try {
+                                $sectionTitle = $track['section_title'] ?? 'Part ' . $sectionNumber;
+                                $sourceUrl = $track['listen_url'] ?? null; // Direct listen URL from LibriVox API
+                                $duration = $track['playtime'] ?? null; // Playtime in H:M:S format
+
+                                if (empty($sourceUrl)) {
+                                    $this->warn("Skipping section '{$sectionTitle}' for book '{$book->title}' due to missing source URL.");
+                                    continue;
+                                }
+
+                                if (!$isDryRun) {
+                                    AudiobookSection::create([
+                                        'audiobook_id' => $book->id,
+                                        'title' => $sectionTitle,
+                                        'section_number' => $sectionNumber,
+                                        'source_url' => $sourceUrl,
+                                        'duration' => $duration,
+                                        'reader_name' => $track['reader'] ?? $book->narrator, // Prefer section-specific reader, fallback to book narrator
+                                    ]);
+                                } else {
+                                    $this->info("DRY RUN: Would create section '{$sectionTitle}' for audiobook: {$book->title}");
+                                }
+                                $sectionNumber++;
+                            } catch (\Exception $e) {
+                                Log::error("Failed to process section for book ID {$librivoxId}, section number {$sectionNumber}: " . $e->getMessage(), [
+                                    'exception' => $e,
+                                    'track_data' => $track,
+                                ]);
+                                $this->error("Error processing section for book '{$book->title}'. See logs for details.");
+                            }
+                        }
+                        $this->info("Imported " . (count($audioTracks)) . " sections for audiobook: {$book->title}");
+                    } else {
+                        $this->warn("No audio tracks found for sections for book: {$book->title} (LibriVox ID: {$librivoxId}).");
+                    }
+
+                    $progressBar->advance();
+                } catch (\Exception $e) {
+                    Log::error("Failed to import audiobook with LibriVox ID {$librivoxId}: " . $e->getMessage(), [
+                        'exception' => $e,
+                        'api_book_data' => $apiBook,
+                    ]);
+                    $this->error("Error importing audiobook '{$title}'. See logs for details. Skipping to next book.");
+                    $progressBar->advance(); // Ensure progress bar advances even on error
                 }
-
-                $progressBar->advance();
-            } catch (\Exception $e) {
-                Log::error("Failed to import audiobook with LibriVox ID {$librivoxId}: " . $e->getMessage(), [
-                    'exception' => $e,
-                    'api_book_data' => $apiBook,
-                ]);
-                $this->error("Error importing audiobook '{$title}'. See logs for details. Skipping to next book.");
-                $progressBar->advance(); // Ensure progress bar advances even on error
             }
+
+            $progressBar->finish();
+            $this->info("\nProcessing complete.");
+            if ($isDryRun) {
+                $this->info("DRY RUN finished. No changes were made to the database.");
+            } else {
+                $this->info("{$createdCount} audiobooks created, {$updatedCount} audiobooks updated.");
+            }
+
+            return Command::SUCCESS;
         }
 
-        $progressBar->finish();
-        $this->info("\nProcessing complete.");
-        if ($isDryRun) {
-            $this->info("DRY RUN finished. No changes were made to the database.");
-        } else {
-            $this->info("{$createdCount} audiobooks created, {$updatedCount} audiobooks updated.");
+        /**
+         * Converts ISO 639-2/3 language codes to full language names.
+         *
+         * @param string $code The ISO language code.
+         * @return string The full language name.
+         */
+        private function convertLanguageCodeToName(string $code): string
+        {
+            // Use the language mapping from the config file
+            return Config::get('languages.' . strtolower($code), ucfirst(strtolower($code)));
         }
-
-        return Command::SUCCESS;
     }
-
-    /**
-     * Converts ISO 639-2/3 language codes to full language names.
-     *
-     * @param string $code The ISO language code.
-     * @return string The full language name.
-     */
-    private function convertLanguageCodeToName(string $code): string
-    {
-        // Use the language mapping from the config file
-        return Config::get('languages.' . strtolower($code), ucfirst(strtolower($code)));
-    }
-}
